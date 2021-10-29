@@ -7,24 +7,31 @@ def main():
 
     print('Press [q] to exit')
     # define a video capture object
-    vid = cv2.VideoCapture(0)
+    vid = cv2.VideoCapture(1)
     
     while(True):
         
         # Capture the video frame
-        # by frame and put the frame in img
+        # by frame and put the frame in img in BGR format
         ret, img = vid.read()
-        
-        # Convert to grayscale.
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        
-        # Blur using 3 * 3 kernel.
-        gray_blurred = cv2.blur(gray, (3, 3))
-        
+
+
+        # set blur kernel dim
+        blur_value=4
+        # get blurred image to reduce small elements influence
+        blurred_img=cv2.blur(img,(blur_value,blur_value))
+        # set thresholds for BGR colors
+        min_mask=np.array([0,0,125])
+        max_mask=np.array([100,100,255])
+        # Get red channel from BGR mask
+        red=cv2.inRange(img,min_mask,max_mask)
+        # show red image
+        cv2.imshow("Red channel",red)
+
         # Apply Hough transform on the blurred image.
-        detected_circles = cv2.HoughCircles(gray_blurred, 
+        detected_circles = cv2.HoughCircles(red, 
                         cv2.HOUGH_GRADIENT, 1, 20, param1 = 50,
-                    param2 = 30, minRadius = 50, maxRadius = 80)
+                    param2 = 30, minRadius = 50, maxRadius = 200)
         
         # Draw circles that are detected.
         if detected_circles is not None:
