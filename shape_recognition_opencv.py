@@ -26,15 +26,8 @@ def elaborateImage(image, min_threshold=0, max_threshold=255, blur_value=3):
 def getCircles(image, min_radius=0, max_radius=0):
     """ return a list of found circles given a binary image and minimum and maximum radius """
     # get circles
-    circles = cv2.HoughCircles(image, 
-                           cv2.HOUGH_GRADIENT, 
-                           1, 
-                           10,
-                           param1=30,
-                           param2=30,
-                           minRadius=0,
-                           maxRadius=0                           
-                          )
+    #circles = cv2.HoughCircles(image,cv2.HOUGH_GRADIENT, 1, 10,param1=30,param2=30,minRadius=0,maxRadius=0)
+    circles  = cv2.HoughCircles(image, method=cv2.HOUGH_GRADIENT_ALT, dp=1.5, minDist=10, param1=20, param2=0.5, minRadius=min_radius, maxRadius=max_radius)
     return circles
 
 def getCalibrationMarkers(image, calibration_matrix=(6, 7)):
@@ -142,11 +135,12 @@ def calibrateImage(image, calibration_matrix=(6, 7)):
 def main():
 
     # define calibration matrix dimensions
-    calibration_matrix = (6, 7)
+    calibration_matrix = (5, 7)
+
 
     # define a video capture object, index represent camera source
 
-    vid = cv2.VideoCapture(1)
+    vid = cv2.VideoCapture(2)
 
     # default threshold range
 
@@ -159,7 +153,7 @@ def main():
     print('Press [c] when camera is ready to take calibration image')
 
     while True:
-        break
+        # break
         # get image from video
 
         ret, img = vid.read()
@@ -187,9 +181,9 @@ def main():
             break
 
 
-    img = cv2.imread('image.jpg')
+    #img = cv2.imread('image.jpg')
     img_dim = img.shape[:2]
-    bin_img = elaborateImage(img, min_threshold=80, max_threshold=255)
+    bin_img = elaborateImage(img,min_threshold= thr[0],max_threshold= thr[1])
     newcameramtx, roi, mtx, dist = calibrateImage(
         bin_img, calibration_matrix=calibration_matrix)
 
@@ -225,17 +219,17 @@ def main():
 
         ret, img = vid.read()
 
-        img = cv2.imread('Inkedlaser.jpg')
+        #img = cv2.imread('Inkedlaser.jpg')
         # undistort acquired image
 
         img = cv2.undistort(img, mtx, dist, None, newcameramtx)
 
         # get binary image
 
-        bin_img = elaborateImage(img, min_threshold=100, max_threshold=103, blur_value=7)
+        bin_img = elaborateImage(img, min_threshold=200, max_threshold=255, blur_value=30)
         m=100
         M=200
-        bin_img = cv2.inRange(img, (m,m,m),(M,M,M))
+         # show binary image
 
         cv2.imshow('bin',bin_img)
         # get circles
