@@ -23,6 +23,20 @@ def elaborateImage(image, min_threshold=0, max_threshold=255, blur_value=3):
     return cv2.inRange(e_img, min_threshold, max_threshold)
 
 
+def getCircles(image, min_radius=0, max_radius=0):
+    """ return a list of found circles given a binary image and minimum and maximum radius """
+    # get circles
+    circles = cv2.HoughCircles(image, 
+                           cv2.HOUGH_GRADIENT, 
+                           1, 
+                           10,
+                           param1=30,
+                           param2=30,
+                           minRadius=0,
+                           maxRadius=0                           
+                          )
+    return circles
+
 def getCalibrationMarkers(image, calibration_matrix=(6, 7)):
     """ Returns calibration markers found in a binary image"""
 
@@ -33,13 +47,12 @@ def getCalibrationMarkers(image, calibration_matrix=(6, 7)):
     return detected_circles
 
 
-def drawCircles(image, circles, radious=10):
-    """ Returns an image on which are drawn the given circles with given radious """
+def drawCircles(image, circles, ):
+    """ Returns an image on which are drawn the given circles"""
 
     # if has found circles draw them to image
 
     if circles is not None:
-
         # convert float to int16
 
         circles_int = np.uint16(np.around(circles))
@@ -50,11 +63,11 @@ def drawCircles(image, circles, radious=10):
 
             # get circle center coordinates and radious
 
-            x, y = circle[0], circle[1]
+            x, y,r  = circle[0], circle[1], circle[2]
 
             # draw circumference on image at coordinates (x,y) with radious r, color green and thikness 2
 
-            cv2.circle(image, (x, y), radious, (0, 255, 0), 2)
+            cv2.circle(image, (x, y), r, (0, 255, 0), 2)
 
             # draw cicle center on image at coordinates (x,y) with radious 2, color red and thikness 3
 
@@ -105,6 +118,10 @@ def calibrateImage(image, calibration_matrix=(6, 7)):
 
     img_points = []
 
+    # get image dimension
+
+    img_dim = image.shape[:2]
+
     # add obtained calibration markers to image point vector
 
     img_points.append(calibration_markers)
@@ -119,7 +136,7 @@ def calibrateImage(image, calibration_matrix=(6, 7)):
     newcameramtx, roi = cv2.getOptimalNewCameraMatrix(
         mtx, dist, img_dim, 1, img_dim)
 
-    return newcameramtx, roi
+    return newcameramtx, roi, mtx, dist
 
 
 def main():
@@ -142,7 +159,7 @@ def main():
     print('Press [c] when camera is ready to take calibration image')
 
     while True:
-
+        break
         # get image from video
 
         ret, img = vid.read()
@@ -169,10 +186,12 @@ def main():
         if cv2.waitKey(1) & 0xff == ord('c'):
             break
 
-    bin_image = elaborateImage(img, min_threshold=100, max_threshold=200)
 
-    newcameramtx, roi = calibrateImage(
-        bin_image, calibration_matrix=calibration_matrix)
+    img = cv2.imread('image.jpg')
+    img_dim = img.shape[:2]
+    bin_img = elaborateImage(img, min_threshold=80, max_threshold=255)
+    newcameramtx, roi, mtx, dist = calibrateImage(
+        bin_img, calibration_matrix=calibration_matrix)
 
     # exit program if no calibration marker is found
 
@@ -206,13 +225,31 @@ def main():
 
         ret, img = vid.read()
 
+        img = cv2.imread('Inkedlaser.jpg')
+        # undistort acquired image
+
+        img = cv2.undistort(img, mtx, dist, None, newcameramtx)
+
+        # get binary image
+
+        bin_img = elaborateImage(img, min_threshold=100, max_threshold=103, blur_value=7)
+        m=100
+        M=200
+        bin_img = cv2.inRange(img, (m,m,m),(M,M,M))
+
+        cv2.imshow('bin',bin_img)
+        # get circles
+
+        detected_circles = getCircles(bin_img, min_radius=1, max_radius=max(img_dim))
+
+        # print circles on image
+
+        drawCircles(img, detected_circles)
+
         # display acquired image in a window
 
         cv2.imshow("Detected Circle", img)
 
-        # undistort acquired image
-
-        dst = cv2.undistort(img, mtx, dist, None, newcameramtx)
 
         # when q button is pressed exit while loop
 
