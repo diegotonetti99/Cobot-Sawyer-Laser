@@ -15,11 +15,10 @@ import gi
 gi.require_version('Gtk', '3.0')
 # import gtk library used to create gui
 from gi.repository import Gtk, GdkPixbuf
-# create a camera thread used to acquire images while doing other operations
 
 
 def imageConvert(image, image_viewer, is_binary=False):
-    """ Convert opencv image in gtk image """
+    """ Set opencv image to GTK image widget """
     h, w = image.shape[:2]
     if is_binary:
         image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
