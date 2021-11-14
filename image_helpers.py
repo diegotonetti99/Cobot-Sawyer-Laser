@@ -3,28 +3,35 @@ import cv2
 import numpy as np
 
 
-def elaborateImage(image, min_threshold=0, max_threshold=255, blur_value=3):
+def elaborateImage(image, min_threshold=0, max_threshold=255, blur_value=3, BGR=False):
     """ Return a binary image where pixels with intensity between minimum and maximum threshold are set to 1, pixels with intensity out of that range are set to zero, applying BGR to gray scale and blur  """
 
-    # convert image to grayscale
+    # if BGR is true return BGR binary image
 
-    e_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    if BGR:
+        e_img = cv2.blur(image, (blur_value, blur_value))
+        e_img = cv2.inRange(e_img, (min_threshold, min_threshold, min_threshold), (max_threshold, max_threshold, max_threshold))
+        return cv2.cvtColor(e_img, cv2.COLOR_GRAY2RGB)
 
-    # blur image
+    else:
+        # convert image to grayscale
 
-    e_img = cv2.blur(e_img, (blur_value, blur_value))
+        e_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    # apply threshold and return image
+        # blur image
 
-    return cv2.inRange(e_img, min_threshold, max_threshold)
+        e_img = cv2.blur(e_img, (blur_value, blur_value))
+
+        # apply threshold and return image
+
+        return cv2.inRange(e_img, min_threshold, max_threshold)
 
 
 def getCircles(image, min_radius=0, max_radius=0):
     """ return a list of found circles given a binary image and minimum and maximum radius """
     # get circles
-    #circles = cv2.HoughCircles(image,cv2.HOUGH_GRADIENT, 1, 10,param1=30,param2=30,minRadius=0,maxRadius=0)
-    circles = cv2.HoughCircles(image, method=cv2.HOUGH_GRADIENT_ALT, dp=1.5,
-                               minDist=10, param1=20, param2=0.5, minRadius=min_radius, maxRadius=max_radius)
+    #circles = cv2.HoughCircles(image,cv2.HOUGH_GRADIENT, 1.2, 100)#,param1=30,param2=30,minRadius=0,maxRadius=0)
+    circles = cv2.HoughCircles(image, method=cv2.HOUGH_GRADIENT_ALT, dp=1.5,                               minDist=10, param1=20, param2=0.5, minRadius=min_radius, maxRadius=max_radius)
     return circles
 
 
@@ -72,7 +79,7 @@ def pointDistance(a, b):
     return sqrt(pow(a[0]-b[0])+pow(a[1]-b[1]))
 
 
-def calibrateImage(image, calibration_markers,calibration_matrix=(6, 7)):
+def calibrateImage(image, calibration_markers, calibration_matrix=(6, 7)):
     """ Return calibration parameters from a given binary image and calibration matrix size """
 
     # create a float32 biimensional array of zeros
@@ -85,8 +92,6 @@ def calibrateImage(image, calibration_markers,calibration_matrix=(6, 7)):
 
     real_points[:, :2] = np.mgrid[0:calibration_matrix[1],
                                   0:calibration_matrix[0]].T.reshape(-1, 2)
-
-    
 
     # if no calibration marker was found return None
 
