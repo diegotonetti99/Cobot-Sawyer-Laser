@@ -2,6 +2,9 @@ import cv2
 
 import numpy as np
 
+from PIL import Image, ImageTk
+
+from math import sqrt, pow
 
 def elaborateImage(image, min_threshold=0, max_threshold=255, blur_value=3, BGR=False):
     """ Return a binary image where pixels with intensity between minimum and maximum threshold are set to 1, pixels with intensity out of that range are set to zero, applying BGR to gray scale and blur  """
@@ -10,7 +13,8 @@ def elaborateImage(image, min_threshold=0, max_threshold=255, blur_value=3, BGR=
 
     if BGR:
         e_img = cv2.blur(image, (blur_value, blur_value))
-        e_img = cv2.inRange(e_img, (min_threshold, min_threshold, min_threshold), (max_threshold, max_threshold, max_threshold))
+        e_img = cv2.inRange(e_img, (min_threshold, min_threshold,
+                            min_threshold), (max_threshold, max_threshold, max_threshold))
         return cv2.cvtColor(e_img, cv2.COLOR_GRAY2RGB)
 
     else:
@@ -30,8 +34,9 @@ def elaborateImage(image, min_threshold=0, max_threshold=255, blur_value=3, BGR=
 def getCircles(image, min_radius=0, max_radius=0):
     """ return a list of found circles given a binary image and minimum and maximum radius """
     # get circles
-    #circles = cv2.HoughCircles(image,cv2.HOUGH_GRADIENT, 1.2, 100)#,param1=30,param2=30,minRadius=0,maxRadius=0)
-    circles = cv2.HoughCircles(image, method=cv2.HOUGH_GRADIENT_ALT, dp=1.5,                               minDist=10, param1=20, param2=0.5, minRadius=min_radius, maxRadius=max_radius)
+    # circles = cv2.HoughCircles(image,cv2.HOUGH_GRADIENT, 1.2, 100)#,param1=30,param2=30,minRadius=0,maxRadius=0)
+    circles = cv2.HoughCircles(image, method=cv2.HOUGH_GRADIENT_ALT, dp=1.5,
+                               minDist=10, param1=20, param2=0.5, minRadius=min_radius, maxRadius=max_radius)
     return circles
 
 
@@ -57,7 +62,7 @@ def drawCircles(image, circles, ):
 
         # iterate each circle
 
-        for circle in circles_int[:, 0]:
+        for circle in circles_int[0, :]:
 
             # get circle center coordinates and radious
 
@@ -76,7 +81,7 @@ def drawCircles(image, circles, ):
 def pointDistance(a, b):
     """ Returns the distance between 2 points """
 
-    return sqrt(pow(a[0]-b[0])+pow(a[1]-b[1]))
+    return sqrt(pow(a[0]-b[0],2)+pow(a[1]-b[1],2))
 
 
 def calibrateImage(image, calibration_markers, calibration_matrix=(6, 7)):
@@ -130,3 +135,14 @@ def calibrateImage(image, calibration_markers, calibration_matrix=(6, 7)):
         mtx, dist, img_dim, 1, img_dim)
 
     return newcameramtx, roi, mtx, dist
+
+
+def convertImage(cv_image):
+    """ Return a tk image from an opencv image """
+    cv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
+
+    image = Image.fromarray(cv_image)
+
+    tk_image = ImageTk.PhotoImage(image=image)
+
+    return tk_image
