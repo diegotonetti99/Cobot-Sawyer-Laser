@@ -4,111 +4,8 @@ from ttkbootstrap import Style
 
 from image_helpers import *
 
-from threading import Thread
+from cameraThread import *
 
-import cv2
-
-import numpy as np
-
-
-class CalibrationCameraThread(Thread):
-
-    def __init__(self, rgb_image_widget, gray_image_widget, min_thr=0, max_thr=255, blur=3):
-
-        super(CalibrationCameraThread, self).__init__()
-
-        self.rgb_image_widget = rgb_image_widget
-
-        self.gray_image_widget = gray_image_widget
-
-        self.loop = True
-
-        self.vid = cv2.VideoCapture(0)
-
-        self.min_thr = min_thr
-
-        self.max_thr = max_thr
-
-        self.blur = blur
-
-        self.image = None
-
-        self.newcameramtx, self.roi, self.mtx, self.dist = None, None, None, None
-
-    def run(self):
-
-        while self.loop:
-            try:
-                ret, self.image = self.vid.read()
-
-                tk_image = convertImage(self.image)
-
-                self.rgb_image_widget.configure(image=tk_image)
-
-                self.rgb_image_widget.image = tk_image
-
-                self.image = elaborateImage(self.image, self.min_thr,
-                                            self.max_thr, self.blur, False)
-
-                tk_image = convertImage(self.image)
-
-                self.gray_image_widget.configure(image=tk_image)
-
-                self.gray_image_widget.image = tk_image
-            except:
-                pass
-        self.vid.release()
-
-    def stop(self):
-
-        self.loop = False
-
-        self.vid.release()
-
-
-class LaserAcquisitionThread(CalibrationCameraThread):
-
-    def __init__(self, rgb_image_widget, gray_image_widget, mtx, dist, newcameramtx, min_thr=0, max_thr=255, blur=3):
-
-        super().__init__(rgb_image_widget, gray_image_widget, min_thr, max_thr, blur)
-
-        self.circles = None
-
-        self.mtx = mtx
-        self.dist = dist
-        self.newcameramtx = newcameramtx
-
-    def run(self):
-
-        while self.loop:
-            try:
-                # get image
-                ret, self.image = self.vid.read()
-                # apply calibration
-                self.image = cv2.undistort(
-                    self.image, self.mtx, self.dist, None, self.newcameramtx)
-                # apply transformation to rgb image and get binary image
-                self.gray_image = elaborateImage(self.image, self.min_thr,
-                                                 self.max_thr, self.blur, False)
-                # convert image to gui framework
-                tk_image = convertImage(self.gray_image)
-                # configure image widget
-                self.gray_image_widget.configure(image=tk_image)
-                # set image of the widget
-                self.gray_image_widget.image = tk_image
-                # find circles in binary image
-                self.circles = getCircles(self.gray_image)
-                # draw circles in rgb image
-                self.image = drawCircles(self.image, self.circles)
-                # convert image to gui framework
-                tk_image = convertImage(self.image)
-                # configure image widget
-                self.rgb_image_widget.configure(image=tk_image)
-                # set imge
-                self.rgb_image_widget.image = tk_image
-            except:
-                pass
-        self.vid.release()
 
 # create application class with frame parent
 
@@ -127,8 +24,6 @@ class Application(ttk.Frame):
         self.widgets()
         # define thread variable
         self.thread = None
-        # define calibration matrix
-        self.calibration_matrix = (6, 7)
         # define calibration markers variable
         self.calibration_markers = None
 
@@ -143,80 +38,100 @@ class Application(ttk.Frame):
         # create stop button
         self.stopButton = ttk.Button(
             self, text='Stop', command=self.on_stop_click, style='danger.TButton', width=self.button_width)
-        self.stopButton.grid(column=1, row=0, sticky=tk.E +
+        self.stopButton.grid(column=1, row=0, columnspan=2, sticky=tk.E +
                              tk.W, padx=self.margins, pady=self.margins)
 
         # create calibrate button
         self.calibrateButton = ttk.Button(
             self, text='Calibrate', command=self.on_calibrate_click, style='primary.TButton', width=self.button_width)
         self.calibrateButton.grid(
-            column=0, row=1, columnspan=2, sticky=tk.E+tk.W, padx=self.margins, pady=self.margins)
+            column=0, row=1, columnspan=3, sticky=tk.E+tk.W, padx=self.margins, pady=self.margins)
+
+        # calibration matrix label
+        self.calibration_matrix_label = ttk.Label(
+            self, text='Calibration matrix (r, c)')
+        self.calibration_matrix_label.grid(
+            column=0, row=2, padx=self.margins, pady=self.margins)
+
+        # calibration row value
+        self.row_v = tk.StringVar()
+        self.row_v.set(7)
+        self.row_entry = ttk.Entry(self, textvariable=self.row_v)
+        self.row_entry.grid(
+            column=1, row=2, padx=self.margins, pady=self.margins)
+
+        # calibration column value
+        self.column_v = tk.StringVar()
+        self.column_v.set(6)
+        self.column_entry = ttk.Entry(self, textvariable=self.column_v)
+        self.column_entry.grid(
+            column=2, row=2, padx=self.margins, pady=self.margins)
 
         # create a vertical separator
         self.separator = ttk.Separator(self, orient=tk.VERTICAL)
-        self.separator.grid(column=2, row=0, rowspan=8,
+        self.separator.grid(column=3, row=0, rowspan=8,
                             sticky=tk.N+tk.S, padx=self.margins, pady=self.margins)
 
         # create a horizontal separator
         self.h_seprarator = ttk.Separator(self, orient=tk.HORIZONTAL)
-        self.h_seprarator.grid(column=0, row=6, columnspan=4,
+        self.h_seprarator.grid(column=0, row=6, columnspan=7,
                                sticky=tk.E+tk.W, padx=self.margins, pady=self.margins)
 
         # create image widget
         self.color_image_w = ttk.Label(self, compound='image')
         self.color_image_w.grid(
-            column=0, row=7, columnspan=2, sticky=tk.N+tk.E+tk.S+tk.W, padx=self.margins, pady=self.margins)
+            column=0, row=7, columnspan=3, sticky=tk.N+tk.E+tk.S+tk.W, padx=self.margins, pady=self.margins)
 
         # create gray image widget
         self.gray_image_w = ttk.Label(self, compound='image')
         self.gray_image_w.grid(
-            column=3, row=7, columnspan=3, sticky=tk.N+tk.E+tk.S+tk.W, padx=self.margins, pady=self.margins)
+            column=4, row=7, columnspan=3, sticky=tk.N+tk.E+tk.S+tk.W, padx=self.margins, pady=self.margins)
 
         # create min label
         self.min_label = ttk.Label(self, text='Min')
-        self.min_label.grid(column=3, row=0, sticky=tk.E,
+        self.min_label.grid(column=4, row=0, sticky=tk.E,
                             padx=self.margins, pady=self.margins)
 
         # create min threshold slider
         self.min_threshold_scale = ttk.Scale(
             self, orient=tk.HORIZONTAL, value=50, to=255, from_=0, command=self.on_min_threshold_changed, style='primary.Horizontal.TScale')
         self.min_threshold_scale.grid(
-            column=4, row=0, columnspan=1, sticky=tk.E+tk.W, padx=self.margins, pady=self.margins)
+            column=5, row=0, columnspan=1, sticky=tk.E+tk.W, padx=self.margins, pady=self.margins)
 
         # create min theshold label
         self.min_thr_v = tk.StringVar()
         self.min_thr_v.set(self.scaleToInt(self.min_threshold_scale.get()))
         self.min_thr_label = ttk.Label(self, textvariable=self.min_thr_v)
         self.min_thr_label.grid(
-            column=5, row=0, sticky=tk.W, padx=self.margins, pady=self.margins)
+            column=6, row=0, sticky=tk.W, padx=self.margins, pady=self.margins)
 
         # create max label
         self.min_label = ttk.Label(self, text='Max')
         self.min_label.grid(
-            column=3, row=1, sticky=tk.E, padx=self.margins, pady=self.margins)
+            column=4, row=1, sticky=tk.E, padx=self.margins, pady=self.margins)
 
         # create max threshold slider
         self.max_threshold_scale = ttk.Scale(
             self, orient=tk.HORIZONTAL, value=150, to=255, from_=0, command=self.on_max_threshold_changed, style='primary.Horizontal.TScale')
         self.max_threshold_scale.grid(
-            column=4, row=1, columnspan=1, sticky=tk.E+tk.W, padx=self.margins, pady=self.margins)
+            column=5, row=1, columnspan=1, sticky=tk.E+tk.W, padx=self.margins, pady=self.margins)
 
         # create max theshold label
         self.max_thr_v = tk.StringVar()
         self.max_thr_v.set(self.scaleToInt(self.max_threshold_scale.get()))
         self.max_thr_label = ttk.Label(self, textvariable=self.max_thr_v)
         self.max_thr_label.grid(
-            column=5, row=1, sticky=tk.W, padx=self.margins, pady=self.margins)
+            column=6, row=1, sticky=tk.W, padx=self.margins, pady=self.margins)
 
         # create blur label
         self.min_label = ttk.Label(self, text='Blur')
         self.min_label.grid(
-            column=3, row=2, sticky=tk.E, padx=self.margins, pady=self.margins)
+            column=4, row=2, sticky=tk.E, padx=self.margins, pady=self.margins)
 
         # create blur slider
         self.blur_scale = ttk.Scale(
             self, orient=tk.HORIZONTAL, value=3, to=20, from_=1, command=self.on_blur_changed, style='primary.Horizontal.TScale')
-        self.blur_scale.grid(column=4, row=2, columnspan=1,
+        self.blur_scale.grid(column=5, row=2, columnspan=1,
                              sticky=tk.E+tk.W, padx=self.margins, pady=self.margins)
 
         # create min theshold label
@@ -224,7 +139,7 @@ class Application(ttk.Frame):
         self.blur_v.set(self.scaleToInt(self.blur_scale.get()))
         self.blur_thr_label = ttk.Label(self, textvariable=self.blur_v)
         self.blur_thr_label.grid(
-            column=5, row=2, sticky=tk.W, padx=self.margins, pady=self.margins)
+            column=6, row=2, sticky=tk.W, padx=self.margins, pady=self.margins)
 
     def on_capture_click(self):
         if self.thread is None:
@@ -251,7 +166,7 @@ class Application(ttk.Frame):
         if self.thread is not None:
             # get calbration markers from image
             self.calibration_markers = getCalibrationMarkers(
-                self.thread.image, calibration_matrix=self.calibration_matrix)
+                self.thread.image, calibration_matrix=(int(self.row_v.get()), int(self.column_v.get())))
             # get calibration params
             self.newcameramtx, self.roi, self.mtx, self.dist = calibrateImage(
                 self.thread.image, self.calibration_markers)
@@ -270,7 +185,7 @@ class Application(ttk.Frame):
                 self, text='Get position', command=self.on_get_position_clicked, style='primary.TButton', width=self.button_width)
             # add button to grid
             self.positionButton.grid(
-                column=0, row=1, columnspan=2, sticky=tk.E+tk.W, padx=self.margins, pady=self.margins)
+                column=0, row=1, columnspan=3, sticky=tk.E+tk.W, padx=self.margins, pady=self.margins)
             # remove capure button
             self.captureButton.grid_remove()
             # create capture laser button
