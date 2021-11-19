@@ -6,6 +6,7 @@ from image_helpers import *
 
 from cameraThread import *
 
+import json
 
 # create application class with frame parent
 
@@ -18,6 +19,8 @@ class Application(ttk.Frame):
     def __init__(self, master=None):
         # initialize parent class
         ttk.Frame.__init__(self, master, padding=10)
+        #self.event_add(tk.EventType.Destroy, self.on_closing)
+        self.winfo_toplevel().protocol("WM_DELETE_WINDOW", self.on_closing)
         # initialize grid
         self.grid()
         # create all widgets
@@ -26,6 +29,8 @@ class Application(ttk.Frame):
         self.thread = None
         # define calibration markers variable
         self.calibration_markers = None
+        # load user params
+        self.getParams()
 
     def widgets(self):
         """ Create all first page widgets """
@@ -45,7 +50,19 @@ class Application(ttk.Frame):
         self.calibrateButton = ttk.Button(
             self, text='Calibrate', command=self.on_calibrate_click, style='primary.TButton', width=self.button_width)
         self.calibrateButton.grid(
-            column=0, row=1, columnspan=3, sticky=tk.E+tk.W, padx=self.margins, pady=self.margins)
+            column=0, row=1, sticky=tk.E+tk.W, padx=self.margins, pady=self.margins)
+
+        # camera label
+        self.camera_label = ttk.Label(self, text='Camera index')
+        self.camera_label.grid(column=1, row=1, sticky=tk.E,
+                               padx=self.margins, pady=self.margins)
+
+        # camera text
+        self.camera_v = tk.StringVar()
+        self.camera_v.set(0)
+        self.camera_entry = ttk.Entry(self, textvariable=self.camera_v)
+        self.camera_entry.grid(
+            column=2, row=1, padx=self.margins, pady=self.margins)
 
         # calibration matrix label
         self.calibration_matrix_label = ttk.Label(
@@ -143,23 +160,23 @@ class Application(ttk.Frame):
 
     def on_capture_click(self):
         if self.thread is None:
+            # create camera thread to execute acquisitin in parallel
             self.thread = CalibrationCameraThread(
-                self.color_image_w, self.gray_image_w, self.min_threshold_scale.get(), self.max_threshold_scale.get(), self.blur_scale.get())
-
+                self.color_image_w, self.gray_image_w, self.min_threshold_scale.get(), self.max_threshold_scale.get(), self.blur_scale.get(), int(self.camera_v.get()))
+            # start camera acquisition loop
             self.thread.start()
 
     def on_capture_laser_click(self):
         if self.thread is None:
             # create new laser acquisition thread
             self.thread = LaserAcquisitionThread(self.color_image_w, self.gray_image_w, self.mtx, self.dist, self.newcameramtx, self.min_threshold_scale.get(
-            ), self.max_threshold_scale.get(), self.blur_scale.get())
+            ), self.max_threshold_scale.get(), self.blur_scale.get(), int(self.camera_v.get()))
             # start thread
             self.thread.start()
 
     def on_stop_click(self):
         if self.thread is not None:
             self.thread.stop()
-
             self.thread = None
 
     def on_calibrate_click(self):
@@ -185,7 +202,7 @@ class Application(ttk.Frame):
                 self, text='Get position', command=self.on_get_position_clicked, style='primary.TButton', width=self.button_width)
             # add button to grid
             self.positionButton.grid(
-                column=0, row=1, columnspan=3, sticky=tk.E+tk.W, padx=self.margins, pady=self.margins)
+                column=0, row=1, sticky=tk.E+tk.W, padx=self.margins, pady=self.margins)
             # remove capure button
             self.captureButton.grid_remove()
             # create capture laser button
@@ -220,14 +237,49 @@ class Application(ttk.Frame):
     def scaleToInt(self, value):
         return int(float(value))
 
+    def saveParams(self):
+        """ Save user params to data.json """
+        # create data struct
+        data = {
+            "camera": int(self.camera_v.get()),
+            "rows": int(self.row_v.get()),
+            "columns": int(self.column_v.get()),
+            "min_thr": int(self.min_thr_v.get()),
+            "max_thr": int(self.max_thr_v.get()),
+            "blur": int(self.blur_v.get())
+        }
+        # open data.json in write mode
+        with open('data.json', 'w') as file:
+            # write data to file
+            json.dump(data, file)
+
+    def getParams(self):
+        """ get user params """
+        # try to open data.json
+        try:
+            with open('data.json', 'r') as file:
+                data = json.load(file)
+            self.camera_v.set(data['camera'])
+            self.row_v.set(data['rows'])
+            self.column_v.set(data['columns'])
+            self.min_thr_v.set(data['min_thr'])
+            self.max_thr_v.set(data['max_thr'])
+            self.blur_v.set(data['blur'])
+        except:
+            pass
+
+    def on_closing(self):
+        if self.thread is not None:
+            self.saveParams()
+            self.thread.stop()
+
+        self.quit()
+
 
 if __name__ == '__main__':
+    print('Starting program')
     style = Style(theme='darkly')
     app = Application()
     app.master.title('Cobot sawyer laser')
     app.mainloop()
-
-    # execute when window is closed
-    if app.thread is not None:
-        app.thread.stop()
-        app.thread.join()
+    print('Execution terminated')
