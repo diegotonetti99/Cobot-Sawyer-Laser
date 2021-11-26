@@ -23,14 +23,15 @@ class Application(ttk.Frame):
         self.winfo_toplevel().protocol("WM_DELETE_WINDOW", self.on_closing)
         # initialize grid
         self.grid()
+        # load user params
+        self.getParams()
         # create all widgets
         self.widgets()
         # define thread variable
         self.thread = None
         # define calibration markers variable
         self.calibration_markers = None
-        # load user params
-        self.getParams()
+        
 
     def widgets(self):
         """ Create all first page widgets """
@@ -58,8 +59,6 @@ class Application(ttk.Frame):
                                padx=self.margins, pady=self.margins)
 
         # camera text
-        self.camera_v = tk.StringVar()
-        self.camera_v.set(0)
         self.camera_entry = ttk.Entry(self, textvariable=self.camera_v)
         self.camera_entry.grid(
             column=2, row=1, padx=self.margins, pady=self.margins)
@@ -71,15 +70,11 @@ class Application(ttk.Frame):
             column=0, row=2, padx=self.margins, pady=self.margins)
 
         # calibration row value
-        self.row_v = tk.StringVar()
-        self.row_v.set(7)
         self.row_entry = ttk.Entry(self, textvariable=self.row_v)
         self.row_entry.grid(
             column=1, row=2, padx=self.margins, pady=self.margins)
 
         # calibration column value
-        self.column_v = tk.StringVar()
-        self.column_v.set(6)
         self.column_entry = ttk.Entry(self, textvariable=self.column_v)
         self.column_entry.grid(
             column=2, row=2, padx=self.margins, pady=self.margins)
@@ -111,13 +106,11 @@ class Application(ttk.Frame):
 
         # create min threshold slider
         self.min_threshold_scale = ttk.Scale(
-            self, orient=tk.HORIZONTAL, value=50, to=255, from_=0, command=self.on_min_threshold_changed, style='primary.Horizontal.TScale')
+            self, orient=tk.HORIZONTAL, value=int(self.min_thr_v.get()), to=255, from_=0, command=self.on_min_threshold_changed, style='primary.Horizontal.TScale')
         self.min_threshold_scale.grid(
             column=5, row=0, columnspan=1, sticky=tk.E+tk.W, padx=self.margins, pady=self.margins)
 
         # create min theshold label
-        self.min_thr_v = tk.StringVar()
-        self.min_thr_v.set(self.scaleToInt(self.min_threshold_scale.get()))
         self.min_thr_label = ttk.Label(self, textvariable=self.min_thr_v)
         self.min_thr_label.grid(
             column=6, row=0, sticky=tk.W, padx=self.margins, pady=self.margins)
@@ -129,13 +122,11 @@ class Application(ttk.Frame):
 
         # create max threshold slider
         self.max_threshold_scale = ttk.Scale(
-            self, orient=tk.HORIZONTAL, value=150, to=255, from_=0, command=self.on_max_threshold_changed, style='primary.Horizontal.TScale')
+            self, orient=tk.HORIZONTAL, value=int(self.max_thr_v.get()), to=255, from_=0, command=self.on_max_threshold_changed, style='primary.Horizontal.TScale')
         self.max_threshold_scale.grid(
             column=5, row=1, columnspan=1, sticky=tk.E+tk.W, padx=self.margins, pady=self.margins)
 
         # create max theshold label
-        self.max_thr_v = tk.StringVar()
-        self.max_thr_v.set(self.scaleToInt(self.max_threshold_scale.get()))
         self.max_thr_label = ttk.Label(self, textvariable=self.max_thr_v)
         self.max_thr_label.grid(
             column=6, row=1, sticky=tk.W, padx=self.margins, pady=self.margins)
@@ -147,13 +138,11 @@ class Application(ttk.Frame):
 
         # create blur slider
         self.blur_scale = ttk.Scale(
-            self, orient=tk.HORIZONTAL, value=3, to=20, from_=1, command=self.on_blur_changed, style='primary.Horizontal.TScale')
+            self, orient=tk.HORIZONTAL, value=int(self.blur_v.get()), to=20, from_=1, command=self.on_blur_changed, style='primary.Horizontal.TScale')
         self.blur_scale.grid(column=5, row=2, columnspan=1,
                              sticky=tk.E+tk.W, padx=self.margins, pady=self.margins)
 
-        # create min theshold label
-        self.blur_v = tk.StringVar()
-        self.blur_v.set(self.scaleToInt(self.blur_scale.get()))
+        # create min theshold label 
         self.blur_thr_label = ttk.Label(self, textvariable=self.blur_v)
         self.blur_thr_label.grid(
             column=6, row=2, sticky=tk.W, padx=self.margins, pady=self.margins)
@@ -181,36 +170,39 @@ class Application(ttk.Frame):
 
     def on_calibrate_click(self):
         if self.thread is not None:
+            self.calibration_matrix=(int(self.row_v.get()), int(self.column_v.get()))
             # get calbration markers from image
             self.calibration_markers = getCalibrationMarkers(
-                self.thread.image, calibration_matrix=(int(self.row_v.get()), int(self.column_v.get())))
-            # get calibration params
-            self.newcameramtx, self.roi, self.mtx, self.dist = calibrateImage(
-                self.thread.image, self.calibration_markers)
-            print(self.newcameramtx)
+                self.thread.image, calibration_matrix=self.calibration_matrix)
+            print(self.calibration_markers)
+            if self.calibration_markers is not None:
+                # get calibration params
+                self.newcameramtx, self.roi, self.mtx, self.dist = calibrateImage(
+                    self.thread.image, self.calibration_markers, self.calibration_matrix)
+                print(self.newcameramtx)
 
-            # stop thread
-            self.thread.stop()
-            # join thread
-            # self.thread.join()
-            # set thread to none
-            self.thread = None
-            # remove calibrate button
-            self.calibrateButton.grid_remove()
-            # create get position button
-            self.positionButton = ttk.Button(
-                self, text='Get position', command=self.on_get_position_clicked, style='primary.TButton', width=self.button_width)
-            # add button to grid
-            self.positionButton.grid(
-                column=0, row=1, sticky=tk.E+tk.W, padx=self.margins, pady=self.margins)
-            # remove capure button
-            self.captureButton.grid_remove()
-            # create capture laser button
-            self.captureLaserButton = ttk.Button(
-                self, text='Capture', command=self.on_capture_laser_click, style='success.TButton', width=self.button_width)
-            # add button to grid
-            self.captureLaserButton.grid(
-                column=0, row=0, sticky=tk.E+tk.W, padx=self.margins, pady=self.margins)
+                # stop thread
+                self.thread.stop()
+                # join thread
+                # self.thread.join()
+                # set thread to none
+                self.thread = None
+                # remove calibrate button
+                self.calibrateButton.grid_remove()
+                # create get position button
+                self.positionButton = ttk.Button(
+                    self, text='Get position', command=self.on_get_position_clicked, style='primary.TButton', width=self.button_width)
+                # add button to grid
+                self.positionButton.grid(
+                    column=0, row=1, sticky=tk.E+tk.W, padx=self.margins, pady=self.margins)
+                # remove capure button
+                self.captureButton.grid_remove()
+                # create capture laser button
+                self.captureLaserButton = ttk.Button(
+                    self, text='Capture', command=self.on_capture_laser_click, style='success.TButton', width=self.button_width)
+                # add button to grid
+                self.captureLaserButton.grid(
+                    column=0, row=0, sticky=tk.E+tk.W, padx=self.margins, pady=self.margins)
 
     def on_get_position_clicked(self):
         if self.thread is not None:
@@ -255,6 +247,12 @@ class Application(ttk.Frame):
 
     def getParams(self):
         """ get user params """
+        self.camera_v = tk.StringVar(value=0)
+        self.min_thr_v = tk.IntVar(value=50)
+        self.max_thr_v=tk.IntVar(value=150)
+        self.row_v=tk.IntVar(value=6)
+        self.column_v=tk.IntVar(value=7)
+        self.blur_v=tk.IntVar(value=3)
         # try to open data.json
         try:
             with open('data.json', 'r') as file:

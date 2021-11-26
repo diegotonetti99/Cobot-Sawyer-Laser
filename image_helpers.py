@@ -12,19 +12,18 @@ def elaborateImage(image, min_threshold=0, max_threshold=255, blur_value=3, BGR=
     # if BGR is true return BGR binary image
 
     if BGR:
-        e_img = cv2.blur(image, (blur_value, blur_value))
-        e_img = cv2.inRange(e_img, (min_threshold, min_threshold,
-                            min_threshold), (max_threshold, max_threshold, max_threshold))
-        return cv2.cvtColor(e_img, cv2.COLOR_GRAY2RGB)
+        e_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        e_img = cv2.blur(e_img, (blur_value, blur_value))
+        e_img = cv2.inRange(e_img, min_threshold, max_threshold)
+        return e_img
+        # return cv2.cvtColor(e_img, cv2.COLOR_GRAY2RGB)
 
     else:
         # convert image to grayscale
 
-        e_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
         # blur image
 
-        e_img = cv2.blur(e_img, (blur_value, blur_value))
+        e_img = cv2.blur(image, (blur_value, blur_value))
 
         # apply threshold and return image
 
@@ -34,9 +33,9 @@ def elaborateImage(image, min_threshold=0, max_threshold=255, blur_value=3, BGR=
 def getCircles(image, min_radius=0, max_radius=0):
     """ return a list of found circles given a binary image and minimum and maximum radius """
     # get circles
-    # circles = cv2.HoughCircles(image,cv2.HOUGH_GRADIENT, 1.2, 100)#,param1=30,param2=30,minRadius=0,maxRadius=0)
-    circles = cv2.HoughCircles(image, method=cv2.HOUGH_GRADIENT_ALT, dp=1.5,
-                               minDist=10, param1=20, param2=0.5, minRadius=min_radius, maxRadius=max_radius)
+    circles = cv2.HoughCircles(image,cv2.HOUGH_GRADIENT, 1.2, 100)#,param1=30,param2=30,minRadius=0,maxRadius=0)
+    #circles = cv2.HoughCircles(image, method=cv2.HOUGH_GRADIENT_ALT, dp=1.5,
+    #                           minDist=10, param1=20, param2=0.5, minRadius=min_radius, maxRadius=max_radius)
     return circles
 
 
@@ -143,6 +142,6 @@ def convertImage(cv_image):
 
     image = Image.fromarray(cv_image)
 
-    tk_image = ImageTk.PhotoImage(image=image)
+    tk_image = ImageTk.PhotoImage(image=image, )
 
     return tk_image

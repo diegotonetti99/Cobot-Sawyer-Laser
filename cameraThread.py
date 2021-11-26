@@ -20,6 +20,8 @@ class CalibrationCameraThread(Thread):
         self.loop = True
 
         self.vid = cv2.VideoCapture(camera)
+        self.vid.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        self.vid.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
         self.min_thr = min_thr
 
@@ -29,6 +31,8 @@ class CalibrationCameraThread(Thread):
 
         self.image = None
 
+        self.gray_image = None
+
         self.camera = camera
 
         self.newcameramtx, self.roi, self.mtx, self.dist = None, None, None, None
@@ -36,7 +40,10 @@ class CalibrationCameraThread(Thread):
     def acquire(self):
         """ View acquired image in tk widget """
         ret, self.image = self.vid.read()
+        # resize image
+        #self.image = cv2.resize(self.image, (640,400))
 
+        self.gray_image = self.image
         tk_image = convertImage(self.image)
 
         self.rgb_image_widget.configure(image=tk_image)
@@ -44,7 +51,7 @@ class CalibrationCameraThread(Thread):
         self.rgb_image_widget.image = tk_image
 
         self.image = elaborateImage(self.image, self.min_thr,
-                                    self.max_thr, self.blur, False)
+                                    self.max_thr, self.blur, True)
 
         tk_image = convertImage(self.image)
 
@@ -57,7 +64,8 @@ class CalibrationCameraThread(Thread):
         while self.loop:
             try:
                 self.acquire()
-            except:
+            except Exception as e:
+                print(e)
                 pass
         self.vid.release()
         return
@@ -68,9 +76,9 @@ class CalibrationCameraThread(Thread):
 
 class LaserAcquisitionThread(CalibrationCameraThread):
 
-    def __init__(self, rgb_image_widget, gray_image_widget, mtx, dist, newcameramtx, min_thr=0, max_thr=255, blur=3):
+    def __init__(self, rgb_image_widget, gray_image_widget, mtx, dist, newcameramtx, min_thr=0, max_thr=255, blur=3,camera_index=0):
 
-        super().__init__(rgb_image_widget, gray_image_widget, min_thr, max_thr, blur)
+        super().__init__(rgb_image_widget, gray_image_widget, min_thr, max_thr, blur,camera=camera_index)
 
         self.circles = None
 
@@ -83,6 +91,8 @@ class LaserAcquisitionThread(CalibrationCameraThread):
     def acquire(self):
         # get image
         ret, self.image = self.vid.read()
+
+        self.image = cv2.resize(self.image, (680,400))
         # apply calibration
         self.image = cv2.undistort(
             self.image, self.mtx, self.dist, None, self.newcameramtx)
