@@ -117,7 +117,7 @@ class Waypoints(object):
         return True
 
 
-def main():
+def calibrateCobot():
     """SDK Joint Position Waypoints Example
 
     Records joint positions each time the navigator 'OK/wheel'
@@ -172,7 +172,3 @@ def main():
     plt.show()
 
 
-
-
-if __name__ == '__main__':
-    main()
