@@ -2,7 +2,11 @@ import cv2
 
 import numpy as np
 
-from PIL import Image, ImageTk
+from PyQt5 import QtGui
+
+from PyQt5.QtGui import QPixmap
+
+from PyQt5.QtCore import Qt
 
 from math import sqrt, pow
 
@@ -33,9 +37,9 @@ def elaborateImage(image, min_threshold=0, max_threshold=255, blur_value=3, BGR=
 def getCircles(image, min_radius=0, max_radius=0):
     """ return a list of found circles given a binary image and minimum and maximum radius """
     # get circles
-    circles = cv2.HoughCircles(image,cv2.HOUGH_GRADIENT, 1.2, 100)#,param1=30,param2=30,minRadius=0,maxRadius=0)
-    #circles = cv2.HoughCircles(image, method=cv2.HOUGH_GRADIENT_ALT, dp=1.5,
-    #                           minDist=10, param1=20, param2=0.5, minRadius=min_radius, maxRadius=max_radius)
+    #circles = cv2.HoughCircles(image,cv2.HOUGH_GRADIENT, 1.2, 10)#,param1=30,param2=30,minRadius=0,maxRadius=0)
+    circles = cv2.HoughCircles(image, method=cv2.HOUGH_GRADIENT_ALT, dp=1.5,
+                               minDist=10, param1=20, param2=0.5, minRadius=min_radius, maxRadius=max_radius)
     return circles
 
 
@@ -44,13 +48,13 @@ def getCalibrationMarkers(image, calibration_matrix=(6, 7)):
 
     # detect circles
 
-    ret, detected_circles = cv2.findCirclesGrid(image, calibration_matrix)
+    ret, detected_circles = cv2.findCirclesGrid(image, calibration_matrix,  flags = cv2.CALIB_CB_SYMMETRIC_GRID)
 
     return detected_circles
 
 
-def drawCircles(image, circles, ):
-    """ Returns an image on which are drawn the given circles"""
+def drawCircles(image, circles ):
+    """ Returns an image on which are drawn the given circles. Return image"""
 
     # if has found circles draw them to image
 
@@ -64,8 +68,34 @@ def drawCircles(image, circles, ):
         for circle in circles_int[0, :]:
 
             # get circle center coordinates and radious
-
             x, y, r = circle[0], circle[1], circle[2]
+
+
+            # draw circumference on image at coordinates (x,y) with radious r, color green and thikness 2
+
+            cv2.circle(image, (x, y), r, (0, 255, 0), 2)
+
+            # draw cicle center on image at coordinates (x,y) with radious 2, color red and thikness 3
+
+            cv2.circle(image, (x, y), 2, (0, 0, 255), 3)
+    return image
+
+def drawGridCircles(image, circles ):
+    """ Returns an image on which are drawn the given grid circles. Returns image"""
+
+    # if has found circles draw them to image
+
+    if circles is not None:
+        # convert float to int16
+
+        circles_int = np.uint16(np.around(circles))
+
+        # iterate each circle
+
+        for circle in circles_int[:, 0]:
+
+            # get circle center coordinates and radious
+            x,y,r=circle[0], circle[1], 10
 
             # draw circumference on image at coordinates (x,y) with radious r, color green and thikness 2
 
@@ -77,6 +107,7 @@ def drawCircles(image, circles, ):
     return image
 
 
+
 def pointDistance(a, b):
     """ Returns the distance between 2 points """
 
@@ -84,7 +115,8 @@ def pointDistance(a, b):
 
 
 def calibrateImage(image, calibration_markers, calibration_matrix=(6, 7)):
-    """ Return calibration parameters from a given binary image and calibration matrix size """
+    """ Return calibration parameters from a given binary image and calibration matrix size.
+    return newcameramtx, roi, mtx, dist"""
 
     # create a float32 biimensional array of zeros
 
@@ -126,7 +158,7 @@ def calibrateImage(image, calibration_markers, calibration_matrix=(6, 7)):
     # get image calibration parameters
 
     ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
-        real_points_v, img_points, img_dim, None, None)
+        real_points_v, img_points, image.shape[::-1], None, None)
 
     # get optimal calibration parameters
 
@@ -136,12 +168,11 @@ def calibrateImage(image, calibration_markers, calibration_matrix=(6, 7)):
     return newcameramtx, roi, mtx, dist
 
 
-def convertImage(cv_image):
-    """ Return a tk image from an opencv image """
-    cv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
-
-    image = Image.fromarray(cv_image)
-
-    tk_image = ImageTk.PhotoImage(image=image, )
-
-    return tk_image
+def convertImage(cv_image,image_dimensions=(640,480)):
+    """Convert from an opencv image to QPixmap. Return QPixmap"""
+    rgb_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
+    h, w, ch = rgb_image.shape
+    bytes_per_line = ch * w
+    convert_to_Qt_format = QtGui.QImage(rgb_image.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
+    p = convert_to_Qt_format.scaled(image_dimensions[0], image_dimensions[1], Qt.KeepAspectRatio)
+    return QPixmap.fromImage(p)

@@ -30,7 +30,7 @@
      </sizepolicy>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="cobot_calibration_tab">
      <attribute name="title">
@@ -85,7 +85,7 @@
         <height>531</height>
        </rect>
       </property>
-      <layout class="QGridLayout" name="gridLayout_2" rowstretch="1,1,1,1,1,5,0,0,0,0" columnstretch="1,1,1,1">
+      <layout class="QGridLayout" name="gridLayout_2" rowstretch="1,1,1,1,1,5,0,0" columnstretch="1,1,1,1">
        <item row="0" column="0" colspan="2">
         <widget class="QPushButton" name="start_camera_acquisition_cal_btn">
          <property name="text">
@@ -128,9 +128,9 @@
         </widget>
        </item>
        <item row="4" column="2">
-        <widget class="QLabel" name="label_5">
+        <widget class="QLabel" name="max_thr_calib_label">
          <property name="text">
-          <string>TextLabel</string>
+          <string>150</string>
          </property>
         </widget>
        </item>
@@ -184,9 +184,9 @@
         </widget>
        </item>
        <item row="3" column="2">
-        <widget class="QLabel" name="label_4">
+        <widget class="QLabel" name="min_thr_calib_label">
          <property name="text">
-          <string>TextLabel</string>
+          <string>50</string>
          </property>
          <property name="scaledContents">
           <bool>false</bool>
@@ -194,7 +194,7 @@
         </widget>
        </item>
        <item row="2" column="2">
-        <widget class="QSpinBox" name="spinBox">
+        <widget class="QSpinBox" name="colums_calibration_matrix">
          <property name="minimum">
           <number>3</number>
          </property>
@@ -204,7 +204,7 @@
         </widget>
        </item>
        <item row="2" column="3">
-        <widget class="QSpinBox" name="spinBox_2">
+        <widget class="QSpinBox" name="rows_calibration_matrix">
          <property name="minimum">
           <number>3</number>
          </property>
@@ -230,9 +230,9 @@
         </widget>
        </item>
        <item row="5" column="2">
-        <widget class="QLabel" name="label_6">
+        <widget class="QLabel" name="blur_calib_label">
          <property name="text">
-          <string>TextLabel</string>
+          <string>3</string>
          </property>
         </widget>
        </item>
@@ -268,7 +268,7 @@
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="QSpinBox" name="spinBox_3">
+        <widget class="QSpinBox" name="camera_index_calib">
          <property name="maximum">
           <number>20</number>
          </property>
@@ -326,16 +326,16 @@
         </widget>
        </item>
        <item row="7" column="2" colspan="2">
-        <widget class="QLabel" name="gray_image_view_calib_2">
+        <widget class="QLabel" name="gray_image_view_lsr">
          <property name="text">
           <string/>
          </property>
         </widget>
        </item>
        <item row="4" column="2">
-        <widget class="QLabel" name="label_10">
+        <widget class="QLabel" name="max_thr_lrs_label">
          <property name="text">
-          <string>TextLabel</string>
+          <string>150</string>
          </property>
         </widget>
        </item>
@@ -389,9 +389,9 @@
         </widget>
        </item>
        <item row="3" column="2">
-        <widget class="QLabel" name="label_14">
+        <widget class="QLabel" name="min_thr_lrs_label">
          <property name="text">
-          <string>TextLabel</string>
+          <string>50</string>
          </property>
          <property name="scaledContents">
           <bool>false</bool>
@@ -435,9 +435,9 @@
         </widget>
        </item>
        <item row="5" column="2">
-        <widget class="QLabel" name="label_15">
+        <widget class="QLabel" name="blur_lsr_label">
          <property name="text">
-          <string>TextLabel</string>
+          <string>3</string>
          </property>
         </widget>
        </item>
@@ -456,7 +456,7 @@
         </widget>
        </item>
        <item row="7" column="0" colspan="2">
-        <widget class="QLabel" name="color_image_view_calib_2">
+        <widget class="QLabel" name="color_image_view_lsr">
          <property name="text">
           <string/>
          </property>
@@ -473,7 +473,7 @@
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="QSpinBox" name="spinBox_6">
+        <widget class="QSpinBox" name="camera_index_lsr">
          <property name="maximum">
           <number>20</number>
          </property>
@@ -497,5 +497,102 @@
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>min_thr_slider_lsr</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>min_thr_lrs_label</receiver>
+   <slot>setNum(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>332</x>
+     <y>197</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>426</x>
+     <y>195</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>max_thr_slider_lsr</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>max_thr_lrs_label</receiver>
+   <slot>setNum(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>249</x>
+     <y>214</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>415</x>
+     <y>222</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>blur_slider_lsr</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>blur_lsr_label</receiver>
+   <slot>setNum(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>287</x>
+     <y>242</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>433</x>
+     <y>244</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>min_thr_slider_calib</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>min_thr_calib_label</receiver>
+   <slot>setNum(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>295</x>
+     <y>193</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>438</x>
+     <y>196</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>max_thr_slider_calib</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>max_thr_calib_label</receiver>
+   <slot>setNum(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>355</x>
+     <y>220</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>453</x>
+     <y>222</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>blur_slider_calib</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>blur_calib_label</receiver>
+   <slot>setNum(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>332</x>
+     <y>240</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>438</x>
+     <y>239</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
