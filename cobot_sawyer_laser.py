@@ -1,18 +1,24 @@
+#! /usr/bin/python3
 from PyQt5.QtWidgets import (
     QApplication, QDialog, QMainWindow, QMessageBox
 )
-from ApplicationUI.AppDesing import Ui_MainWindow
+from ApplicationUI.AppDesign import Ui_MainWindow
 
-#from cartesian_acquisition import calibrateCobot
+from cartesian_acquisition import CobotCalibrator
+
+from go_to_cartesian_pose import CartesianMover
 
 import sys
 
 import json
 
+import numpy as np
+
 from cameraThread import CalibrationCameraThread, LaserAcquisitionThread
 
 from image_helpers import calibrateImage, getCalibrationMarkers, drawGridCircles, convertImage, getCircles
 
+from config import *
 
 class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
     def __init__(self, parent=None):
@@ -21,16 +27,19 @@ class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
         # loadUi('ApplicationUI/AppDesign.ui',self)
         self.attachEvents()
         self.camera_thread = None
-
-        self.loadUserValues()
-
-        
-        self.display_image_dimensions = (1280/3, 720/3)
-
-        self.newcameramtx, self.roi, self.mtx, self.dist = None, None, None, None
         # righe per colonne
-        self.calibration_matrix = (5, 4)
-
+        self.calibration_matrix = [5, 4]
+        # load user values from user data
+        self.loadUserValues()
+        # set image viewr diemnsion
+        self.display_image_dimensions = (1280/3, 720/3)
+        # initialize calibration camera params
+        self.newcameramtx, self.roi, self.mtx, self.dist = None, None, None, None
+        self.transform_matrix=None
+        self.cobot_acquired_points=None
+        # load cobot calibration markers
+        self.loadCalibrationsMarkers()
+        
     def closeEvent(self,event):
         self.saveUserValues()
 
@@ -53,6 +62,7 @@ class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
             self.acquire_laser_position_clicked)
         self.stop_camera_acq_lsr_btn.clicked.connect(
             self.stop_camera_acquisition_lsr_clicked)
+        self.go_to_btn.clicked.connect(self.go_to_clicked)
 
         # attach sliders events
         self.min_thr_slider_calib.valueChanged.connect(
@@ -66,6 +76,12 @@ class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
         self.max_thr_slider_lsr.valueChanged.connect(
             self.max_thr_slider_lsr_changed)
         self.blur_slider_lsr.valueChanged.connect(self.blur_slider_lsr_changed)
+
+        # attach spinbox events
+        self.column_spin_box_calib.valueChanged.connect(self.column_calib_changed)
+        self.row_spin_box_calib.valueChanged.connect(self.row_calib_changed)
+        self.column_spin_box_lsr.valueChanged.connect(self.column_lsr_changed)
+        self.row_spin_box_lsr.valueChanged.connect(self.row_lsr_changed)
 
     def loadUserValues(self):
         try:
@@ -81,9 +97,13 @@ class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
                     data['min_thr_sld_lsr'])
                 self.max_thr_slider_lsr.setValue(
                     data['max_thr_sld_lsr'])
-                self.blur_slider_lrs.setValue(data['blur_sld_lsr'])
-        except:
-            pass
+                self.blur_slider_lsr.setValue(data['blur_sld_lsr'])
+                self.column_spin_box_calib.setValue(data['column_clb'])
+                self.row_spin_box_calib.setValue(data['row_clb'])
+                self.column_spin_box_lsr.setValue(data['column_lsr'])
+                self.row_spin_box_lsr.setValue(data['row_lsr'])
+        except Exception as e:
+            print(e)
     
     def saveUserValues(self):
         data={'min_thr_sld_clb':self.min_thr_slider_calib.value(),
@@ -91,13 +111,19 @@ class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
         'blur_sld_clb':self.blur_slider_calib.value(),
         'min_thr_sld_lsr':self.min_thr_slider_lsr.value(),
         'max_thr_sld_lsr':self.max_thr_slider_lsr.value(),
-        'blur_sld_lsr':self.blur_slider_lsr.value()}
+        'blur_sld_lsr':self.blur_slider_lsr.value(),
+        'column_clb':self.column_spin_box_calib.value(),
+        'row_clb':self.row_spin_box_calib.value(),
+        'column_lsr':self.column_spin_box_lsr.value(),
+        'row_lsr':self.column_spin_box_lsr.value()}
         with open('user data.json','w') as file:
             json.dump(data, file)
 
     def start_cobot_calibration_clicked(self):
         print("start cobot calib")
-        # calibrateCobot()
+        self.cobotCalibr=CobotCalibrator(self.cobotCalibrationCallback, self.cobot_calibration_log_label)
+        
+        # self.transform_matrix= do something
 
     def stop_cobot_calibration_clicked(self):
         print("stop cobot calib")
@@ -178,7 +204,40 @@ class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
         if self.camera_thread is not None:
             self.camera_thread.blur = self.blur_slider_lsr.value()
 
+        self.column_spin_box_calib.valueChanged.connect(self.column_calib_changed)
+        self.column_spin_box_calib.valueChanged.connect(self.column_calib_changed)
+    
+        self.column_spin_box_calib.valueChanged.connect(self.column_calib_changed)
 
+        self.column_spin_box_calib.valueChanged.connect(self.column_calib_changed)
+
+    def column_calib_changed(self):
+        self.calibration_matrix[1]=self.column_spin_box_calib.value()
+    
+    def row_calib_changed(self):
+        self.calibration_matrix[0]=self.row_spin_box_calib.value()
+
+    def column_lsr_changed(self):
+        self.calibration_matrix[1]=self.column_spin_box_lsr.value() 
+    
+    def row_lsr_changed(self):
+        self.calibration_matrix[0]=self.row_spin_box_lsr.value()
+
+    def go_to_clicked(self):
+        """ move robot to marker at row,column specified in the spin box """
+        marker_position=[self.row_spin_box_lsr.value()*markers_distance, self.column_spin_box_lsr.value()*markers_distance]
+        position=self.fromMarkersToCobot(marker_position)
+        self.mover=CartesianMover(position, callback)
+
+    def fromMarkersToCobot(self, position):
+        """ convert marker coordinates to cobot coordinates """
+        return position
+    
+    def cobotCalibrationCallback(self, calibrator):
+        """ Event called when cobot has acquired all points """
+        self.cobot_acquired_points=calibrator.waypoints._waypoints
+        pass
+        
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     win = CobotSawyerLaserApp()

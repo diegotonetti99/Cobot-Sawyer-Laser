@@ -10,6 +10,8 @@ from PyQt5.QtCore import Qt
 
 from math import sqrt, pow
 
+from config import *
+
 def elaborateImage(image, min_threshold=0, max_threshold=255, blur_value=3, BGR=False):
     """ Return a binary image where pixels with intensity between minimum and maximum threshold are set to 1, pixels with intensity out of that range are set to zero, applying BGR to gray scale and blur  """
 
@@ -128,6 +130,9 @@ def calibrateImage(image, calibration_markers, calibration_matrix=(6, 7)):
 
     real_points[:, :2] = np.mgrid[0:calibration_matrix[1],
                                   0:calibration_matrix[0]].T.reshape(-1, 2)
+    
+    # set coordinates distance of x millimeters
+    real_points=np.multiply(real_points,markers_distance)
 
     # if no calibration marker was found return None
 

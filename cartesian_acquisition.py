@@ -28,6 +28,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 import intera_interface
 
+from threading import Thread
 
 from intera_motion_interface import (
     MotionTrajectory,
@@ -116,59 +117,57 @@ class Waypoints(object):
         print("\nExiting example...")
         return True
 
+class CobotCalibrator(Thread):
+    def __init__(self,callback,label):
+        super(CobotCalibrator,self).__init__()
+        self.daemon=True
+        self.callback=callback
+        self.label=label
+        self.speed=0.3
+        self.accuracy=intera_interface.settings.JOINT_ANGLE_TOLERANCE
+    
 
-def calibrateCobot():
-    """SDK Joint Position Waypoints Example
+    def run(self):
+        self.calibrateCobot()
+        self.callback(self)
 
-    Records joint positions each time the navigator 'OK/wheel'
-    button is pressed.
-    Upon pressing the navigator 'Rethink' button, the recorded joint positions
-    will begin playing back in a loop.
-    """
-    arg_fmt = argparse.RawDescriptionHelpFormatter
-    parser = argparse.ArgumentParser(formatter_class=arg_fmt,
-                                     description=main.__doc__)
-    parser.add_argument(
-        '-s', '--speed', default=0.3, type=float,
-        help='joint position motion speed ratio [0.0-1.0] (default:= 0.3)'
-    )
-    parser.add_argument(
-        '-a', '--accuracy',
-        default=intera_interface.settings.JOINT_ANGLE_TOLERANCE, type=float,
-        help='joint position accuracy (rad) at which waypoints must achieve'
-    )
-    args = parser.parse_args(rospy.myargv()[1:])
+    def calibrateCobot():
+        """Records joint positions each time the navigator 'OK/wheel'
+        button is pressed.
+        Upon pressing the navigator 'Rethink' button, the recorded joint positions
+        """
+        
 
-    print("Initializing node... ")
-    rospy.init_node("sdk_joint_position_waypoints", anonymous=True)
+        self.label.setText("Initializing node... ")
+        rospy.init_node("sdk_joint_position_waypoints", anonymous=True)
 
-    waypoints = Waypoints(args.speed, args.accuracy)
+        waypoints = Waypoints(self.speed, self.accuracy)
 
-    # Register clean shutdown
-    rospy.on_shutdown(waypoints.clean_shutdown)
+        # Register clean shutdown
+        rospy.on_shutdown(waypoints.clean_shutdown)
 
-    # Begin example program
-    waypoints.record()
+        # Begin example program
+        waypoints.record()
 
-    # Print waypoints
-    print(waypoints._waypoints)
+        # Print waypoints
+        self.label.setText(waypoints._waypoints)
 
-    # Save csv file with robot coordinates
-    with open('myfile.csv', 'w', newline='') as file:
-        mywriter = csv.writer(file, delimiter=',')
-        mywriter.writerows(waypoints._waypoints)
+        # Save csv file with robot coordinates
+        with open('cobot_acquired_points.csv', 'w', newline='') as file:
+            mywriter = csv.writer(file, delimiter=',')
+            mywriter.writerows(waypoints._waypoints)
 
-    # display waypoints coordinates in 3d scatter plot
-    fig = plt.figure()
-    ax = fig.gca(projection='3d')
-    for point in waypoints._waypoints:
-        ax.scatter(point[0],point[1],point[2])
-    ax.set_xlabel('X Label')
-    ax.set_ylabel('Y Label')
-    ax.set_zlabel('Z Label')
-    ax.set_xlim(0,1)
-    ax.set_ylim(0,1)
-    ax.set_zlim(0,1)
-    plt.show()
+        # display waypoints coordinates in 3d scatter plot
+        fig = plt.figure()
+        ax = fig.gca(projection='3d')
+        for point in waypoints._waypoints:
+            ax.scatter(point[0],point[1],point[2])
+        ax.set_xlabel('X Label')
+        ax.set_ylabel('Y Label')
+        ax.set_zlabel('Z Label')
+        ax.set_xlim(0,1)
+        ax.set_ylim(0,1)
+        ax.set_zlim(0,1)
+        plt.show()
 
 
