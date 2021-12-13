@@ -170,4 +170,20 @@ class CobotCalibrator():
         ax.set_zlim(0,1)
         plt.show()
 
+    def getRTMatrix(P, Q):
+        ''' returns R and t where R is the rotation matrix and t is the translation matrix calculated using Kabsch algorithm. P and Q musth have 3xN dimension. P is the origin matrix and Q is the destination matrix. Q=R*P+t'''
+        # find mean column wise
+        centroid_P = np.mean(P, axis=0)
+        centroid_Q = np.mean(Q, axis=0)
+
+        # subtract mean and center P and Q in the origin
+        Pm = P - centroid_P
+        Qm = Q - centroid_Q
+
+        H = np.matmul(Pm.T, Qm)
+        U, S, V = np.linalg.svd(H)
+        V = V.T
+        R = np.matmul(V, U.T)
+        t = -np.matmul(R, centroid_P.T)+centroid_Q.T
+        return R, t
 
