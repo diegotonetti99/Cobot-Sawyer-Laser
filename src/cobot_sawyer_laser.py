@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (
 )
 from ApplicationUI.AppDesign import Ui_MainWindow
 
-from cartesian_acquisition import CobotCalibrator
+from cartesian_acquisition import CobotCalibrator, getRTMatrix
 
 from go_to_cartesian_pose import CartesianMover
 
@@ -12,7 +12,11 @@ import sys
 
 import json
 
+import csv
+
 import numpy as np
+
+from matplotlib import pyplot as plt
 
 from cameraThread import CalibrationCameraThread, LaserAcquisitionThread
 
@@ -37,8 +41,10 @@ class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
         self.newcameramtx, self.roi, self.mtx, self.dist = None, None, None, None
         self.transform_matrix=None
         self.cobot_acquired_points=None
+        self.R=None
+        self.t=None
         # load cobot calibration markers
-        #self.loadCalibrationsMarkers()
+        self.loadCalibrationsMarkers()
         
     def closeEvent(self,event):
         self.saveUserValues()
@@ -127,6 +133,46 @@ class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
 
     def stop_cobot_calibration_clicked(self):
         print("stop cobot calib")
+
+    def loadCalibrationsMarkers(self):
+        ''' load cobot acquired points on markers from csv file and calculate rotation and transaltion matrix. '''
+        try:
+            # load points from file
+            with open('cobot_acquired_points.csv', 'r') as file:
+                self.cobot_acquired_points = list(csv.reader(file, quoting=csv.QUOTE_NONNUMERIC))
+                print(' cobot_acquired_points.csv found')
+                # display waypoints coordinates in 3d scatter plot
+                fig = plt.figure()
+                ax = fig.gca(projection='3d')
+                for point in self.cobot_acquired_points:
+                    ax.scatter(point[0],point[1],point[2])
+                ax.set_xlabel('X Label')
+                ax.set_ylabel('Y Label')
+                ax.set_zlabel('Z Label')
+                ax.set_xlim(0.5,0.8)
+                ax.set_ylim(0,0.5)
+                ax.set_zlim(0,0.5)
+                plt.show()
+            # see if cobot acquire markers and cobot acquired points has the same lenght
+            if self.cobot_acquired_points is not None:
+                if len(self.cobot_acquired_points)==len(cobot_calibration_markers):
+                    # calculate Rotation and translation matrix
+                    P=np.array(cobot_calibration_markers)
+                    P=np.multiply(P,markers_distance/1000)
+                    Q=np.array(self.cobot_acquired_points)
+                    self.R, self.t = getRTMatrix(P,Q)
+                    # calculate x,y,z errors between the two sets of points
+                    temp_p=[]
+                    for p in P:
+                        temp_p.append(np.matmul(self.R,p)+self.t)
+                    temp_p=np.array(temp_p)
+                    err=Q-temp_p
+                    # save x,y,z errors 
+                    with open('rototranslation_errors.csv','w') as file:
+                        np.savetxt(file,err, delimiter=",")
+        except:
+            print('no cobot calibration points found')
+
 
     def start_camera_acquisition_calib_clicked(self):
         if self.camera_thread == None:
