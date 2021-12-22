@@ -21,8 +21,7 @@ class CalibrationCameraThread(Thread):
         self.loop = True
 
         self.vid = cv2.VideoCapture(camera)
-        self.vid.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-        self.vid.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+        
 
         self.min_thr = min_thr
 
@@ -40,8 +39,12 @@ class CalibrationCameraThread(Thread):
 
         self.newcameramtx, self.roi, self.mtx, self.dist = None, None, None, None
 
+        self.cir_hist=[]
+
     def getImagesFromVideo(self):
         ret, self.image = self.vid.read()
+        self.image = cv2.resize(self.image, (int(1440/2),int(1080/2)), interpolation = cv2.INTER_AREA)
+
 
     def getQtImages(self):
         qt_image = convertImage(self.image,self.image_dimensions)
@@ -53,7 +56,7 @@ class CalibrationCameraThread(Thread):
         """ View acquired image in tk widget """
         self.getImagesFromVideo()        
         self.gray_image = elaborateImage(self.image, self.min_thr,
-                                    self.max_thr, self.blur, True)
+                                    self.max_thr, self.blur, False)
         self.getQtImages()
         
 
@@ -95,13 +98,13 @@ class LaserAcquisitionThread(CalibrationCameraThread):
             self.image, self.mtx, self.dist, None, self.newcameramtx)
         # crop image with roi
         x,y,w,h = self.roi
-        self.image=self.image[y:y+h, x:x+w]
+        #self.image=self.image[y:y+h, x:x+w]
         # apply transformation to rgb image and get binary image
         self.gray_image = elaborateImage(self.image, self.min_thr,
-                                         self.max_thr, self.blur, True)
+                                         self.max_thr, self.blur, False)
         # find circles in image
         self.circles = getCircles(self.gray_image)
-        # draw circles on color image
+
         self.image = drawCircles(self.image, self.circles)
         # draw images on widgets
         self.getQtImages()

@@ -40,19 +40,22 @@ def elaborateImage(image, min_threshold=0, max_threshold=255, blur_value=3, BGR=
 def getCircles(image, min_radius=0, max_radius=0):
     """ return a list of found circles given a binary image and minimum and maximum radius """
     # get circles
-    #circles = cv2.HoughCircles(image,cv2.HOUGH_GRADIENT, 1.2, 10)#,param1=30,param2=30,minRadius=0,maxRadius=0)
-    circles = cv2.HoughCircles(image, method=cv2.HOUGH_GRADIENT_ALT, dp=1.5,
-                               minDist=10, param1=20, param2=0.5, minRadius=min_radius, maxRadius=max_radius)
+    circles = cv2.HoughCircles(image,cv2.HOUGH_GRADIENT, 1.2, 100,param1=30,param2=5,minRadius=1,maxRadius=30)
+    #circles = cv2.HoughCircles(image, method=cv2.HOUGH_GRADIENT_ALT, dp=1.5,
+    #                          minDist=10, param1=20, param2=0.5, minRadius=min_radius, maxRadius=max_radius)
     return circles
 
 
 def getCalibrationMarkers(image, calibration_matrix=(6, 7)):
     """ Returns calibration markers found in a binary image"""
-
+    params = cv2.SimpleBlobDetector_Params()
+    params.maxArea = image.size
+    params.minArea=1000
+    detector = cv2.SimpleBlobDetector_create(params)
     # detect circles
-
-    ret, detected_circles = cv2.findCirclesGrid(image, calibration_matrix,  flags = cv2.CALIB_CB_SYMMETRIC_GRID)
-
+    ret, detected_circles = cv2.findCirclesGrid(image, calibration_matrix,
+                flags=cv2.CALIB_CB_SYMMETRIC_GRID)#, blobDetector=detector)
+    print(ret, detected_circles)
     return detected_circles
 
 
@@ -68,7 +71,7 @@ def drawCircles(image, circles ):
 
         # iterate each circle
 
-        for circle in circles_int[0, :]:
+        for circle in circles_int[0,:]:
 
             # get circle center coordinates and radious
             x, y, r = circle[0], circle[1], circle[2]

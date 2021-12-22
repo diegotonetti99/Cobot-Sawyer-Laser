@@ -32,11 +32,13 @@ class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
         self.attachEvents()
         self.camera_thread = None
         # righe per colonne
-        self.calibration_matrix = [5, 4]
+        self.calibration_matrix = [4, 5]
         # load user values from user data
         self.loadUserValues()
+        self.camera_index_calib.setValue(2)
+        self.camera_index_lsr.setValue(2)
         # set image viewr diemnsion
-        self.display_image_dimensions = (1280/3, 720/3)
+        self.display_image_dimensions = (1440/4, 1080/4)
         # initialize calibration camera params
         self.newcameramtx, self.roi, self.mtx, self.dist = None, None, None, None
         self.transform_matrix=None
@@ -190,7 +192,7 @@ class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
         if self.camera_thread is not None:
             # find calibration markers in the image
             self.calibration_markers = getCalibrationMarkers(
-                self.camera_thread.gray_image, self.calibration_matrix)
+                self.camera_thread.gray_image, (self.calibration_matrix[1],self.calibration_matrix[0]))
 
             if self.calibration_markers is not None:
                 self.camera_thread.stop()
@@ -205,7 +207,7 @@ class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
                 self.color_image_view_calib.setPixmap(qpixmap)
                 # get calibration parameters from image
                 self.newcameramtx, self.roi, self.mtx, self.dist = calibrateImage(
-                    self.camera_thread.gray_image, self.calibration_markers, self.calibration_matrix)
+                    self.camera_thread.gray_image, self.calibration_markers, (self.calibration_matrix[0],self.calibration_matrix[1]))
                 print(self.newcameramtx)
 
                 self.camera_thread = None
@@ -271,19 +273,25 @@ class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
 
     def go_to_clicked(self):
         """ move robot to marker at row,column specified in the spin box """
-        marker_position=[self.row_spin_box_lsr.value()*markers_distance/1000, self.column_spin_box_lsr.value()*markers_distance/1000]
+        marker_position=[self.row_spin_box_lsr.value()*markers_distance/1000, self.column_spin_box_lsr.value()*markers_distance/1000,laser_offset/1000]
         position=self.fromMarkersToCobot(marker_position)
         self.mover=CartesianMover(position, self.go_to_callback)
         self.mover.run()
 
     def fromMarkersToCobot(self, position):
         """ convert marker coordinates to cobot coordinates """
-        return [0.5,position[0],position[1]]
+        robot_position = np.matmul(self.R,position)+self.t
+        return robot_position
     
     def cobotCalibrationCallback(self, calibrator):
         """ Event called when cobot has acquired all points """
         self.cobot_acquired_points=calibrator.waypoints._waypoints
-        print(self.cobot_acquired_points)
+        # calculate Rotation and translation matrix
+        P=np.array(cobot_calibration_markers)
+        P=np.multiply(P,markers_distance/1000)
+        Q=np.array(self.cobot_acquired_points)
+        self.R, self.t = getRTMatrix(P,Q)
+        print(self.R,self.t)
     
     def go_to_callback(self, mover):
         pass

@@ -30,7 +30,7 @@
      </sizepolicy>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="cobot_calibration_tab">
      <attribute name="title">
@@ -401,17 +401,17 @@
        <item row="2" column="2">
         <widget class="QSpinBox" name="column_spin_box_lsr">
          <property name="minimum">
-          <number>3</number>
+          <number>0</number>
          </property>
          <property name="maximum">
-          <number>10</number>
+          <number>4</number>
          </property>
         </widget>
        </item>
        <item row="2" column="3">
         <widget class="QSpinBox" name="row_spin_box_lsr">
          <property name="minimum">
-          <number>3</number>
+          <number>0</number>
          </property>
          <property name="maximum">
           <number>10</number>
