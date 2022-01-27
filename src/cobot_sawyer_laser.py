@@ -20,7 +20,7 @@ from matplotlib import pyplot as plt
 
 from cameraThread import CalibrationCameraThread, LaserAcquisitionThread
 
-from image_helpers import calibrateImage, getCalibrationMarkers, drawGridCircles, convertImage, getCircles
+from helpers import *
 
 from config import *
 
@@ -227,6 +227,10 @@ class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
     def acquire_laser_position_clicked(self):
         if self.camera_thread is not None:
             print(self.camera_thread.circles)
+            circles = self.camera_thread.circles
+            if len(circles)==self.calibration_matrix.size:
+                circles=arrangeCircles(circles, self.calibration_matrix[0], self.calibration_matrix[1])
+                print(circles)
 
     def min_thr_slider_calib_changed(self):
         if self.camera_thread is not None:

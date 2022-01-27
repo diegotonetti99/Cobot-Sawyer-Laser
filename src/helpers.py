@@ -177,16 +177,16 @@ def calibrateImage(image, calibration_markers, calibration_matrix=(6, 7)):
     return newcameramtx, roi, mtx, dist
 
 
-<<<<<<<< HEAD:helpers.py
-def convertImage(cv_image):
-    """ Return a tk image from an opencv image """
-    cv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
 
-    image = Image.fromarray(cv_image)
+#def convertImage(cv_image):
+#    """ Return a tk image from an opencv image """
+#    cv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
 
-    tk_image = ImageTk.PhotoImage(image=image, )
+#    image = Image.fromarray(cv_image)
 
-    return tk_image
+#    tk_image = ImageTk.PhotoImage(image=image, )
+
+#    return tk_image
 
 
 def arrangeCircles(circles, rows, columns):
@@ -224,7 +224,6 @@ def arrangeCircles(circles, rows, columns):
         j=x/dx
         A[i,j]=c
     return A
-========
 def convertImage(cv_image,image_dimensions=(640,480)):
     """Convert from an opencv image to QPixmap. Return QPixmap"""
     rgb_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
@@ -233,4 +232,3 @@ def convertImage(cv_image,image_dimensions=(640,480)):
     convert_to_Qt_format = QtGui.QImage(rgb_image.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
     p = convert_to_Qt_format.scaled(image_dimensions[0], image_dimensions[1], Qt.KeepAspectRatio)
     return QPixmap.fromImage(p)
->>>>>>>> 362ff49b586b8af4a10c1e89a4fac7038886fdf6:src/image_helpers.py

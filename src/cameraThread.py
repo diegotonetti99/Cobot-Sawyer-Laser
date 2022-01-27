@@ -1,9 +1,6 @@
-<<<<<<< HEAD:cameraThread.py
-from helpers import *
-=======
 #! /usr/bin/python3
-from image_helpers import *
->>>>>>> 362ff49b586b8af4a10c1e89a4fac7038886fdf6:src/cameraThread.py
+from helpers import *
+
 
 import cv2
 
@@ -95,12 +92,7 @@ class LaserAcquisitionThread(CalibrationCameraThread):
 
         self.roi =roi
 
-<<<<<<< HEAD:cameraThread.py
         #self.image = cv2.resize(self.image, (680,400))
-=======
-    def acquire(self):
-        self.getImagesFromVideo()
->>>>>>> 362ff49b586b8af4a10c1e89a4fac7038886fdf6:src/cameraThread.py
         # apply calibration
         self.image = cv2.undistort(
             self.image, self.mtx, self.dist, None, self.newcameramtx)
