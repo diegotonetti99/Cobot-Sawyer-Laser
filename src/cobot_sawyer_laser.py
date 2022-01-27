@@ -28,6 +28,8 @@ import os
 
 from datetime import datetime
 
+import pandas as pd
+
 class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -52,6 +54,8 @@ class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
         self.t=None
         # array of all laser acquired positions
         self.laserCooridnates=[]
+        # array of all markers acquire positions
+        self.markersCoordinates=[]
         # load cobot calibration markers - unused due to new calibration at program startup
         self.loadCalibrationsMarkers()
         
@@ -236,16 +240,26 @@ class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
             #print(self.camera_thread.circles)
             circles = self.camera_thread.circles
             print(len(circles[0,:]))
+            if not os.path.exist(self.workFolder):
+                os.mkdir(self.workFolder)
             if len(circles[0,:])==self.calibration_matrix[0]*self.calibration_matrix[1]:
                 circles=arrangeCircles(circles, self.calibration_matrix[0], self.calibration_matrix[1])
                 print(circles)
-                os.mkdir(self.workFolder)
-                np.savetxt(self.workFolder+'camera_markers_acquired_px.csv', circles, delimiter=",")
+                #np.savetxt(self.workFolder+'camera_markers_acquired_px.csv', circles, delimiter=",")
+                dataframe=pd.DataFrame(data=circles[0,:],columns=['x','y','r'])
+                self.markersCoordinates=circles[0,:]
             if len(circles[0,:])==1:
                 print(circles[0,:])
+                # get x,y and r of laser pointer (r is needed to exclude false positives)
                 x,y,r=circles[0,0][0],circles[0,0][1],circles[0,0][2]
-                self.laserCooridnates.append([x,y,r])
-                np.savetxt(self.workFolder+'laser_coordinates.csv',self.laserCooridnates,delimiter=',')
+                # get associated marker
+                index=self.row_spin_box_lsr.value()*self.calibration_matrix[1]+self.column_spin_box_lsr.value()
+                xm,ym,rm=self.markersCoordinates[index][0],self.markersCoordinates[index][1],self.markersCoordinates[index][2]
+                # append laser coordinates and it's target marker
+                self.laserCooridnates.append([x,y,r, xm,ym,rm])
+                dataframe=pd.DataFrame(data=self.laserCooridnates, columns=['x_laser','y_laser','r_laser','x_marker','y_marker','r_marker'])
+                dataframe.to_csv(self.workFolder+'laser_coordinates.csv',encoding='utf-8')
+                #np.savetxt(self.workFolder+'laser_coordinates.csv',self.laserCooridnates,delimiter=',')
 
 
                 

@@ -45,6 +45,7 @@ class CalibrationCameraThread(Thread):
     def getImagesFromVideo(self):
         ret, self.image = self.vid.read()
         self.image = cv2.resize(self.image, (int(1440/2),int(1080/2)), interpolation = cv2.INTER_AREA)
+        self.image=cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
 
 
     def getQtImages(self):
@@ -54,10 +55,12 @@ class CalibrationCameraThread(Thread):
         self.gray_image_widget.setPixmap(qt_image)
 
     def acquire(self):
-        """ View acquired image in tk widget """
+        """ View acquired image in qt widget """
         self.getImagesFromVideo()        
         self.gray_image = elaborateImage(self.image, self.min_thr,
                                     self.max_thr, self.blur, False)
+        # convert gray image to RGB (3 gray channel) to draw color markers
+        self.image=cv2.merge([self.image,self.image,self.image])
         self.getQtImages()
         
 
@@ -105,7 +108,8 @@ class LaserAcquisitionThread(CalibrationCameraThread):
                                          self.max_thr, self.blur, False)
         # find circles in image
         self.circles = getCircles(self.gray_image)
-
+        # convert image from gray to rgb to apply color circles
+        self.image=cv2.merge([self.image,self.image,self.image])
         self.image = drawCircles(self.image, self.circles)
         # draw images on widgets
         self.getQtImages()
