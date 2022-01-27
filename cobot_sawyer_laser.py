@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from ttkbootstrap import Style
 
-from image_helpers import *
+from helpers import *
 
 from cameraThread import *
 
@@ -207,9 +207,10 @@ class Application(ttk.Frame):
     def on_get_position_clicked(self):
         if self.thread is not None:
             circles = self.thread.circles
-            print(circles[0, 0])
-            print(pointDistance(circles[0, 0][:2],
-                  self.calibration_markers[0, 0]))
+            if len(circles)==self.row_v*self.column_v:
+                circles=arrangeCircles(circles, self.row_v, self.column_v)
+            print(circles)
+            #print(pointDistance(circles[0, 0][:2], self.calibration_markers[0, 0]))
 
     def on_min_threshold_changed(self, value):
         self.min_thr_v.set(self.scaleToInt(value))

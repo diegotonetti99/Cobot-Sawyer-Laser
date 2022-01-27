@@ -145,3 +145,40 @@ def convertImage(cv_image):
     tk_image = ImageTk.PhotoImage(image=image, )
 
     return tk_image
+
+
+def arrangeCircles(circles, rows, columns):
+    ''' Arrange circles over a grid pattern of given rows and columns. Returns the arranged matrix. '''
+    # arranged matrix
+    A=[[0 for i in range(rows)] for j in range(columns)]
+    # max and min x value
+    max_x=circles[0,0][0]
+    min_x=circles[0,0][0]
+    # max and min y value
+    max_y=circles[0,0][1]
+    min_y=circles[0,0][1]
+    for c in circles[0,:]:
+        x,y,r=c[0],c[1],c[2]
+        if x<min_x:
+            min_x=x
+        if x>max_x:
+            max_x=x
+        if y<min_y:
+            min_y=y
+        if y>max_y:
+            max_y=y
+    # calculate delta x and delta y
+    delta_x=max_x-min_x
+    delta_y=max_y-min_y
+    # calculate x and y interval dimension
+    dx=delta_x/(columns-1)
+    dy=delta_y/(rows-1)
+    # calculate A matrix index of circles
+    for c in circles[0,:]:
+        x,y=c[0],c[1]
+        # row index
+        i=y/dy
+        # column index
+        j=x/dx
+        A[i,j]=c
+    return A

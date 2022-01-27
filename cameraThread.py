@@ -1,4 +1,4 @@
-from image_helpers import *
+from helpers import *
 
 import cv2
 
@@ -92,7 +92,7 @@ class LaserAcquisitionThread(CalibrationCameraThread):
         # get image
         ret, self.image = self.vid.read()
 
-        self.image = cv2.resize(self.image, (680,400))
+        #self.image = cv2.resize(self.image, (680,400))
         # apply calibration
         self.image = cv2.undistort(
             self.image, self.mtx, self.dist, None, self.newcameramtx)
