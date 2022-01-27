@@ -24,6 +24,10 @@ from helpers import *
 
 from config import *
 
+import os
+
+from datetime import datetime
+
 class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -33,6 +37,7 @@ class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
         self.camera_thread = None
         # righe per colonne
         self.calibration_matrix = [4, 5]
+        self.workFolder='/home/gianmarcococcoli/Desktop/PROVE/' + datetime.today().isoformat() + '/'
         # load user values from user data
         self.loadUserValues()
         self.camera_index_calib.setValue(2)
@@ -45,7 +50,9 @@ class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
         self.cobot_acquired_points=None
         self.R=None
         self.t=None
-        # load cobot calibration markers
+        # array of all laser acquired positions
+        self.laserCooridnates=[]
+        # load cobot calibration markers - unused due to new calibration at program startup
         self.loadCalibrationsMarkers()
         
     def closeEvent(self,event):
@@ -226,11 +233,22 @@ class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
 
     def acquire_laser_position_clicked(self):
         if self.camera_thread is not None:
-            print(self.camera_thread.circles)
+            #print(self.camera_thread.circles)
             circles = self.camera_thread.circles
-            if len(circles)==self.calibration_matrix.size:
+            print(len(circles[0,:]))
+            if len(circles[0,:])==self.calibration_matrix[0]*self.calibration_matrix[1]:
                 circles=arrangeCircles(circles, self.calibration_matrix[0], self.calibration_matrix[1])
                 print(circles)
+                os.mkdir(self.workFolder)
+                np.savetxt(self.workFolder+'camera_markers_acquired_px.csv', circles, delimiter=",")
+            if len(circles[0,:])==1:
+                print(circles[0,:])
+                x,y,r=circles[0,0][0],circles[0,0][1],circles[0,0][2]
+                self.laserCooridnates.append([x,y,r])
+                np.savetxt(self.workFolder+'laser_coordinates.csv',self.laserCooridnates,delimiter=',')
+
+
+                
 
     def min_thr_slider_calib_changed(self):
         if self.camera_thread is not None:
@@ -279,6 +297,8 @@ class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
         """ move robot to marker at row,column specified in the spin box """
         marker_position=[self.row_spin_box_lsr.value()*markers_distance/1000, self.column_spin_box_lsr.value()*markers_distance/1000,laser_offset/1000]
         position=self.fromMarkersToCobot(marker_position)
+        print('GoTo position')
+        print(position)
         self.mover=CartesianMover(position, self.go_to_callback)
         self.mover.run()
 

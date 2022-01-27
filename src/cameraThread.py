@@ -93,9 +93,10 @@ class LaserAcquisitionThread(CalibrationCameraThread):
         self.roi =roi
 
         #self.image = cv2.resize(self.image, (680,400))
+    def acquire(self):
+        self.getImagesFromVideo()
         # apply calibration
-        self.image = cv2.undistort(
-            self.image, self.mtx, self.dist, None, self.newcameramtx)
+        self.image = cv2.undistort(self.image, self.mtx, self.dist, None, self.newcameramtx)
         # crop image with roi
         x,y,w,h = self.roi
         #self.image=self.image[y:y+h, x:x+w]

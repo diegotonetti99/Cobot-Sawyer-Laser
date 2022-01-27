@@ -192,7 +192,7 @@ def calibrateImage(image, calibration_markers, calibration_matrix=(6, 7)):
 def arrangeCircles(circles, rows, columns):
     ''' Arrange circles over a grid pattern of given rows and columns. Returns the arranged matrix. '''
     # arranged matrix
-    A=[[0 for i in range(rows)] for j in range(columns)]
+    A=[[0,0,0] for i in range(rows*columns)]
     # max and min x value
     max_x=circles[0,0][0]
     min_x=circles[0,0][0]
@@ -219,10 +219,14 @@ def arrangeCircles(circles, rows, columns):
     for c in circles[0,:]:
         x,y=c[0],c[1]
         # row index
-        i=y/dy
+        i=int(round(y/dy))
+        print(y,dy)
+        print(i)
         # column index
-        j=x/dx
-        A[i,j]=c
+        j=int(round(x/dx))
+        print(x,dx)
+        print(j)
+        A[j+columns*i]=c
     return A
 def convertImage(cv_image,image_dimensions=(640,480)):
     """Convert from an opencv image to QPixmap. Return QPixmap"""

@@ -26,14 +26,12 @@ import PyKDL
 from tf_conversions import posemath
 from intera_interface import Limb
 
-from threading import Thread
 
 
-class CartesianMover(Thread):
+
+class CartesianMover():
     """ create a cartesian mover thread and move cobot to position=[x,y,z] coordinats in meters. When cobot is in position it calls the given callback function  """
     def __init__(self, position,callback):
-        super(CartesianMover, self).__init__()
-        self.daemon = True
         self.DefaultValues()
         self.callback=callback
         self.position=position
