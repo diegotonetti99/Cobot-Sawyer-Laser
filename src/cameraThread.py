@@ -81,7 +81,7 @@ class CalibrationCameraThread(Thread):
 
 class LaserAcquisitionThread(CalibrationCameraThread):
 
-    def __init__(self, rgb_image_widget, gray_image_widget, mtx, dist, roi, newcameramtx, min_thr=0, max_thr=255, blur=3,camera=0,image_dimensions=(640,480)):
+    def __init__(self, rgb_image_widget, gray_image_widget, mtx, dist, roi, newcameramtx, min_thr=0, max_thr=255, blur=3,camera=0,image_dimensions=(640,480),calibration_matrix=[4,5],average_len=10):
 
         super().__init__(rgb_image_widget, gray_image_widget, min_thr, max_thr, blur,camera=camera,image_dimensions=image_dimensions)
 
@@ -95,7 +95,14 @@ class LaserAcquisitionThread(CalibrationCameraThread):
 
         self.roi =roi
 
+        self.calibration_matrix=calibration_matrix
+
         #self.image = cv2.resize(self.image, (680,400))
+
+        self.circles_array=[]
+
+        self.average_len=average_len
+    
     def acquire(self):
         self.getImagesFromVideo()
         # apply calibration
@@ -108,6 +115,22 @@ class LaserAcquisitionThread(CalibrationCameraThread):
                                          self.max_thr, self.blur, False)
         # find circles in image
         self.circles = getCircles(self.gray_image)
+        # order circles if number correspond to number of elements in calibration matrix
+        if len(self.circles[0, :]) == self.calibration_matrix[0]*self.calibration_matrix[1]:
+                self.circles = arrangeCircles(
+                    self.circles, self.calibration_matrix[0], self.calibration_matrix[1])
+        if len(self.circles[0,:])==self.calibration_matrix[0]*self.calibration_matrix[1] or len(self.circles[0,:])==1:
+            # calc circles average
+            self.circles_array.append(self.circles)
+            self.circles_array=self.circles_array[-self.average_len:]
+            circles_average=[[0,0,0] for i in range(self.circles[0,:])]
+            for circles in self.circles_array:
+                for r in range(0, len(circles[0,:])):
+                    circles_average[r][0]+=circles[0,r][0]/self.average_len
+                    circles_average[r][1]+=circles[0,r][1]/self.average_len
+                    circles_average[r][2]+=circles[0,r][2]/self.average_len
+            circles_average=[circles_average]
+        
         # convert image from gray to rgb to apply color circles
         self.image=cv2.merge([self.image,self.image,self.image])
         self.image = drawCircles(self.image, self.circles)

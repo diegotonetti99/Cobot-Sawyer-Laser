@@ -52,20 +52,6 @@
        <property name="horizontalSpacing">
         <number>6</number>
        </property>
-       <item row="1" column="1">
-        <widget class="QPushButton" name="stop_cobot_calibration_btn">
-         <property name="text">
-          <string>Stop Calibration</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QPushButton" name="start_cobot_calibration_btn">
-         <property name="text">
-          <string>Start Calibration</string>
-         </property>
-        </widget>
-       </item>
        <item row="2" column="0" colspan="2">
         <widget class="QLabel" name="cobot_calibration_log_label">
          <property name="text">
@@ -73,6 +59,13 @@
          </property>
          <property name="wordWrap">
           <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <widget class="QPushButton" name="start_cobot_calibration_btn">
+         <property name="text">
+          <string>Start Calibration</string>
          </property>
         </widget>
        </item>
@@ -92,15 +85,8 @@
         <height>531</height>
        </rect>
       </property>
-      <layout class="QGridLayout" name="gridLayout_2" rowstretch="1,1,1,1,1,5,0,0" columnstretch="1,1,1,1">
-       <item row="0" column="0" colspan="2">
-        <widget class="QPushButton" name="start_camera_acquisition_cal_btn">
-         <property name="text">
-          <string>Start Camera Aquisition</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="1">
+      <layout class="QGridLayout" name="gridLayout_2" rowstretch="1,0,0,0,0,0,0" columnstretch="1,1,1,1">
+       <item row="3" column="1">
         <widget class="QSlider" name="max_thr_slider_calib">
          <property name="maximum">
           <number>255</number>
@@ -110,6 +96,13 @@
          </property>
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0" colspan="2">
+        <widget class="QLabel" name="color_image_view_calib">
+         <property name="text">
+          <string/>
          </property>
         </widget>
        </item>
@@ -127,51 +120,21 @@
          </property>
         </widget>
        </item>
-       <item row="7" column="2" colspan="2">
-        <widget class="QLabel" name="gray_image_view_calib">
+       <item row="4" column="2">
+        <widget class="QLabel" name="blur_calib_label">
          <property name="text">
-          <string/>
+          <string>3</string>
          </property>
         </widget>
        </item>
-       <item row="4" column="2">
+       <item row="3" column="2">
         <widget class="QLabel" name="max_thr_calib_label">
          <property name="text">
           <string>150</string>
          </property>
         </widget>
        </item>
-       <item row="5" column="0">
-        <widget class="QLabel" name="label_3">
-         <property name="text">
-          <string>Blur Value</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="label_2">
-         <property name="text">
-          <string>Min Threshold</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="0">
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>Max Threshold</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
+       <item row="2" column="1">
         <widget class="QSlider" name="min_thr_slider_calib">
          <property name="maximum">
           <number>255</number>
@@ -190,7 +153,51 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="2">
+       <item row="0" column="0" colspan="2">
+        <widget class="QPushButton" name="start_camera_acquisition_cal_btn">
+         <property name="text">
+          <string>Start Camera Aquisition</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Max Threshold</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Blur Value</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Min Threshold</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="2" colspan="2">
+        <widget class="QLabel" name="gray_image_view_calib">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2">
         <widget class="QLabel" name="min_thr_calib_label">
          <property name="text">
           <string>50</string>
@@ -200,27 +207,7 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="2">
-        <widget class="QSpinBox" name="column_spin_box_calib">
-         <property name="minimum">
-          <number>3</number>
-         </property>
-         <property name="maximum">
-          <number>10</number>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="3">
-        <widget class="QSpinBox" name="row_spin_box_calib">
-         <property name="minimum">
-          <number>3</number>
-         </property>
-         <property name="maximum">
-          <number>10</number>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="1">
+       <item row="4" column="1">
         <widget class="QSlider" name="blur_slider_calib">
          <property name="minimum">
           <number>1</number>
@@ -233,51 +220,6 @@
          </property>
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="2">
-        <widget class="QLabel" name="blur_calib_label">
-         <property name="text">
-          <string>3</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="2">
-        <widget class="QLabel" name="label_7">
-         <property name="text">
-          <string>Columns</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="3">
-        <widget class="QLabel" name="label_8">
-         <property name="text">
-          <string>Rows</string>
-         </property>
-        </widget>
-       </item>
-       <item row="7" column="0" colspan="2">
-        <widget class="QLabel" name="color_image_view_calib">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_9">
-         <property name="text">
-          <string>Camera Index</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QSpinBox" name="camera_index_calib">
-         <property name="maximum">
-          <number>20</number>
          </property>
         </widget>
        </item>
@@ -462,23 +404,6 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_18">
-         <property name="text">
-          <string>Camera Index</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QSpinBox" name="camera_index_lsr">
-         <property name="maximum">
-          <number>20</number>
-         </property>
-        </widget>
-       </item>
        <item row="1" column="0">
         <widget class="QPushButton" name="acquire_laser_pos_btn">
          <property name="text">
@@ -504,7 +429,7 @@
      <x>0</x>
      <y>0</y>
      <width>810</width>
-     <height>22</height>
+     <height>30</height>
     </rect>
    </property>
   </widget>
