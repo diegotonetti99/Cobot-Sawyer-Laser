@@ -88,7 +88,7 @@ class Waypoints(object):
         Navigator 'OK/Wheel' button callback
         """
         if value:
-            print("Waypoint Recorded")
+            print(len(self._waypoints)," - Waypoint Recorded")
             # add to the list x,y,z coordinates
             self._waypoints.append(self._limb.endpoint_pose()['position'][:])
 
@@ -136,25 +136,16 @@ class Waypoints(object):
         return True
 
 class CobotCalibrator():
-    def __init__(self,callback,label):
-        self.callback=callback
-        self.label=label
+    def __init__(self):
         self.speed=0.3
         self.accuracy=intera_interface.settings.JOINT_ANGLE_TOLERANCE
-    
-
-    def run(self):
-        self.calibrateCobot()
-        self.callback(self)
 
     def calibrateCobot(self):
         """Records joint positions each time the navigator 'OK/wheel'
         button is pressed.
         Upon pressing the navigator 'Rethink' button, the recorded joint positions
         """
-        
 
-        self.label.setText("Initializing node... ")
         rospy.init_node("sdk_joint_position_waypoints", anonymous=True)
 
         self.waypoints = Waypoints(self.speed, self.accuracy)
@@ -168,7 +159,6 @@ class CobotCalibrator():
         # Print waypoints
         for pt in self.waypoints._waypoints:
             text+='x:' + str(pt[0]) + ' y: ' + str(pt[1]) + ' z: ' + str(pt[2]) + '\n'
-        self.label.setText(text)
 
         # Save csv file with robot coordinates
         with open('cobot_acquired_points.csv', 'w', newline='') as file:

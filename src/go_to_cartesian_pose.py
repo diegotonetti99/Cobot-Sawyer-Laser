@@ -31,15 +31,9 @@ from intera_interface import Limb
 
 class CartesianMover():
     """ create a cartesian mover thread and move cobot to position=[x,y,z] coordinats in meters. When cobot is in position it calls the given callback function  """
-    def __init__(self, position,callback):
+    def __init__(self, position):
         self.DefaultValues()
-        self.callback=callback
         self.position=position
-    
-    def run(self):
-        self.MoveToPosition()
-        self.callback(self)
-
 
     def DefaultValues(self):
         self.linear_speed = 0.6
@@ -48,7 +42,7 @@ class CartesianMover():
         self.rotational_accel = 1.57
         self.timeout=None
         self.tip_name = 'right_hand'
-
+   
     def MoveToPosition(self):
         try:
             rospy.init_node('go_to_cartesian_pose_py')

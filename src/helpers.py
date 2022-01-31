@@ -15,7 +15,7 @@ from config import *
 
 def elaborateImage(image, min_threshold=0, max_threshold=255, blur_value=3, BGR=False):
     """ Return a binary image where pixels with intensity between minimum and maximum threshold are set to 1, pixels with intensity out of that range are set to zero, applying BGR to gray scale and blur  """
-
+    image = image.copy()
     # if BGR is true return BGR binary image
 
     if BGR:
@@ -34,7 +34,8 @@ def elaborateImage(image, min_threshold=0, max_threshold=255, blur_value=3, BGR=
 
         # apply threshold and return image
 
-        return cv2.inRange(e_img, min_threshold, max_threshold)
+        e_img = cv2.inRange(e_img, min_threshold, max_threshold)
+        return e_img
 
 
 def getCircles(image, min_radius=0, max_radius=0):
@@ -53,9 +54,8 @@ def getCalibrationMarkers(image, calibration_matrix=(6, 7)):
     params.minArea=1000
     detector = cv2.SimpleBlobDetector_create(params)
     # detect circles
-    ret, detected_circles = cv2.findCirclesGrid(image, calibration_matrix,
-                flags=cv2.CALIB_CB_SYMMETRIC_GRID)#, blobDetector=detector)
-    print(ret, detected_circles)
+    ret, detected_circles = cv2.findCirclesGrid(image, calibration_matrix,flags=cv2.CALIB_CB_SYMMETRIC_GRID)#, blobDetector=detector)
+    #print(ret, detected_circles)
     return detected_circles
 
 
@@ -63,7 +63,7 @@ def drawCircles(image, circles ):
     """ Returns an image on which are drawn the given circles. Return image"""
 
     # if has found circles draw them to image
-
+    image = image.copy()
     if circles is not None:
         # convert float to int16
 
