@@ -42,6 +42,7 @@ class MoveCobotToPointsApp(QMainWindow, Ui_MainWindow):
 
     def loadCobotCalibPoints(self):
         # load points from file
+        try:
             with open('cobot_acquired_points.csv', 'r') as file:
                 self.cobot_acquired_points = list(
                     csv.reader(file, quoting=csv.QUOTE_NONNUMERIC))
@@ -72,6 +73,8 @@ class MoveCobotToPointsApp(QMainWindow, Ui_MainWindow):
                     # save x,y,z errors
                     with open('rototranslation_errors.csv', 'w') as file:
                         np.savetxt(file, err, delimiter=",")
+        except:
+            print('cobot_acquired_points.csv not found')
 
     def goToHome(self):
         print('not implemented')
