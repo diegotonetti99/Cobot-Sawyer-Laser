@@ -27,8 +27,6 @@ from config import *
 
 import os
 
-from datetime import datetime
-
 import pandas as pd
 
 
@@ -69,8 +67,6 @@ class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
             self.calibrate_camera_clicked)
         self.start_camera_acquisition_cal_btn.clicked.connect(
             self.start_camera_acquisition_calib_clicked)
-        self.stop_cobot_calibration_btn.clicked.connect(
-            self.stop_cobot_calibration_clicked)
         self.start_cobot_calibration_btn.clicked.connect(
             self.start_cobot_calibration_clicked)
         self.start_camera_acquisition_lsr_btn.clicked.connect(
@@ -136,9 +132,6 @@ class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
             self.cobotCalibrationCallback, self.cobot_calibration_log_label)
         self.cobotCalibr.run()
 
-    def stop_cobot_calibration_clicked(self):
-        print("stop cobot calib")
-
     def loadCalibrationsMarkers(self):
         ''' load cobot acquired points on markers from csv file and calculate rotation and transaltion matrix. '''
         try:
@@ -155,9 +148,6 @@ class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
                 ax.set_xlabel('X Label')
                 ax.set_ylabel('Y Label')
                 ax.set_zlabel('Z Label')
-                ax.set_xlim(0.5, 0.8)
-                ax.set_ylim(0, 0.5)
-                ax.set_zlim(0, 0.5)
                 plt.show()
             # see if cobot acquire markers and cobot acquired points has the same lenght
             if self.cobot_acquired_points is not None:
@@ -232,7 +222,8 @@ class CobotSawyerLaserApp(QMainWindow,  Ui_MainWindow):
             # print(self.camera_thread.circles)
             circles = self.camera_thread.circles
             #print(len(circles[0, :]))
-            if not os.path.exist(workFolder):
+            if not os.path.exists(workFolder):
+                print('make dir')
                 os.mkdir(workFolder)
             if len(circles[0, :]) == calibration_matrix[0]*calibration_matrix[1]:
                 #circles = arrangeCircles(circles, calibration_matrix[0], calibration_matrix[1])

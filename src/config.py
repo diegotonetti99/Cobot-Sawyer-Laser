@@ -1,16 +1,18 @@
-import datetime
+from datetime import datetime
+
+import os
 
 markers_distance = 120  # mm
 
 laser_offset=-110 # mm
 
-camera_index=2
+camera_index=0
 
 calibration_matrix=[4,5] # rows, columns
 
-workFolder = '/home/gianmarcococcoli/Desktop/PROVE/' + \
-            datetime.today().isoformat() + '/'
-
+#workFolder = '~/Desktop/PROVE/' + \
+#            datetime.today().isoformat() + '/'
+workFolder = os.path.join(os.path.expanduser('~/Desktop/PROVE'), datetime.now().strftime("%d-%m-%Y %H:%M:%S"))
 average_len=10 # number of elements used to calcualte average values of circles positions
 
 cobot_calibration_markers = [[0, 0, 0], [0, 2, 0], [0, 4, 0],

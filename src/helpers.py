@@ -220,12 +220,8 @@ def arrangeCircles(circles, rows, columns):
         x,y=c[0],c[1]
         # row index
         i=int(round(y/dy))
-        print(y,dy)
-        print(i)
         # column index
         j=int(round(x/dx))
-        print(x,dx)
-        print(j)
         A[j+columns*i]=c
     return A
 def convertImage(cv_image,image_dimensions=(640,480)):
