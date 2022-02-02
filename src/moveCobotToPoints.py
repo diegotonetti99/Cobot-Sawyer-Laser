@@ -84,10 +84,12 @@ class MoveCobotToPointsApp(QMainWindow, Ui_MainWindow):
         marker_position = self.randomPoints.pop(0)
         for i in range(len(marker_position)):
             marker_position[i]=marker_position[i] *markers_distance/1000
-        print(marker_position)
+            if i==len(marker_position)-1:
+                marker_position[i]+=laser_offset/1000
+        print('Position in markers world: ',marker_position)
         position = self.fromMarkersToCobot(marker_position)
         print('GoTo position')
-        print(position)
+        print('Position in cobot world: ',position)
         self.mover = CartesianMover(position)
         self.mover.MoveToPosition()
 
