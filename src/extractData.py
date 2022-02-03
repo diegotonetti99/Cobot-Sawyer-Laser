@@ -109,6 +109,16 @@ class ExtractDataApp(QMainWindow, Ui_MainWindow):
                 self.newcameramtx, self.roi, self.mtx, self.dist = helpers.calibrateImage(
                     self.gray, self.calibration_markers, (calibration_matrix[0], calibration_matrix[1]))
                 print(self.newcameramtx)
+                # undistort calibration image
+                self.image = cv2.undistort(self.image, self.mtx, self.dist, None, self.newcameramtx)
+                calibration_markers=helpers.getCalibrationMarkers(self.image,(calibration_matrix[1], calibration_matrix[0]))
+                if calibration_markers is not None:
+                    self.calibration_markers=calibration_markers
+                    image = helpers.drawGridCircles(self.image, self.calibration_markers)
+                    qpixmap=helpers.convertImage(image,self.dimensions)
+                    self.sourceImageView.setPixmap(qpixmap)
+                    print('Calibrated. New  markers coordinates: ',self.calibration_markers)
+
 
     def loadImages(self):
         dialog = QFileDialog()
@@ -128,8 +138,10 @@ class ExtractDataApp(QMainWindow, Ui_MainWindow):
 
     def changeImage(self):
         self.image2=cv2.imread(self.filenames[self.spinBox.value()])
+        qpixmap=helpers.convertImage(self.image2,self.dimensions)
+        self.sourceImageView.setPixmap(qpixmap)
         # apply calibration
-        #self.image2 = cv2.undistort(self.image2, self.mtx, self.dist, None, self.newcameramtx)
+        self.image2 = cv2.undistort(self.image2, self.mtx, self.dist, None, self.newcameramtx)
         qt_image=helpers.convertImage(self.image2, self.dimensions)
         self.sourceImageView_2.setPixmap(qt_image)
         self.toGray2()
