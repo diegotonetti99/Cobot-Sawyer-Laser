@@ -77,10 +77,13 @@ class MoveCobotToPointsApp(QMainWindow, Ui_MainWindow):
             print('cobot_acquired_points.csv not found')
 
     def goToHome(self):
-        print('not implemented')
+        print('Home')
+        self.mover=CartesianMover(home_position)
+        self.mover.MoveToPosition()
 
     def goToNext(self):
         """ move robot to marker at row,column specified in the spin box """
+        self.goToHome()
         marker_position = self.randomPoints.pop(0)
         for i in range(len(marker_position)):
             marker_position[i]=marker_position[i] *markers_distance/1000

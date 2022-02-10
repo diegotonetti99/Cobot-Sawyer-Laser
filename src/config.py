@@ -4,9 +4,11 @@ import os
 
 markers_distance = 120  # mm
 
-laser_offset=-110 # mm
+laser_offset=110 # mm
 
-camera_index=0
+camera_index=2 # 0
+
+home_position=[-0.16, 0.45, 0.42] # m
 
 calibration_matrix=[4,5] # rows, columns
 

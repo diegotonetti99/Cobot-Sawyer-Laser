@@ -19,6 +19,8 @@ class CaptureImageApp(QMainWindow, Ui_MainWindow):
     def __init__(self,parent=None):
         super().__init__(parent)
         self.setupUi(self)
+        self.label.setText('0')
+        self.counter=0
         self.captureImageBtn.clicked.connect(self.AcquireImage)
         self.cameraThread=CameraThred(self.imageView,camera=camera_index, image_dimensions=(640,480))
         self.imageView.resize(int(1440/2),int(1080/2))
@@ -29,6 +31,8 @@ class CaptureImageApp(QMainWindow, Ui_MainWindow):
             os.mkdir(workFolder)
         name = datetime.now().strftime("%d-%m-%Y %H:%M:%S")+'.png'
         self.cameraThread.saveImage(os.path.join(workFolder,name))
+        self.counter+=1
+        self.label.setText(str(self.counter))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

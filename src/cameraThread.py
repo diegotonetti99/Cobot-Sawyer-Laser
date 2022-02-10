@@ -29,6 +29,7 @@ class CameraThred(Thread):
 
     def getImagesFromVideo(self):
         ret, self.image = self.vid.read()
+        # use half resolution beacuse blob detector can't handle large images
         self.image = cv2.resize(self.image, (int(1440/2),int(1080/2)), interpolation = cv2.INTER_AREA)
         #self.image=cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
 

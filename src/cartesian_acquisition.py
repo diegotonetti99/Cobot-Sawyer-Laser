@@ -88,7 +88,7 @@ class Waypoints(object):
         Navigator 'OK/Wheel' button callback
         """
         if value:
-            print(len(self._waypoints)," - Waypoint Recorded")
+            print(len(self._waypoints)+1," - Waypoint Recorded")
             # add to the list x,y,z coordinates
             self._waypoints.append(self._limb.endpoint_pose()['position'][:])
 

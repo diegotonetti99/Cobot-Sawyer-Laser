@@ -85,7 +85,7 @@ class ExtractDataApp(QMainWindow, Ui_MainWindow):
         dialog.setFileMode(QFileDialog.ExistingFiles)
         dialog.setNameFilter("Images (*.png)")
         self.filename = dialog.getOpenFileName()
-        self.image=cv2.imread(self.filename[0])
+        self.image=self.loadImage(self.filename[0])
         qt_image = helpers.convertImage(self.image, self.dimensions)
         self.sourceImageView.setPixmap(qt_image)
         print(self.min_threshold, self.max_threshold)
@@ -137,7 +137,7 @@ class ExtractDataApp(QMainWindow, Ui_MainWindow):
             self.destImageView_2.setPixmap(qt_image)
 
     def changeImage(self):
-        self.image2=cv2.imread(self.filenames[self.spinBox.value()])
+        self.image2=self.loadImage(self.filenames[self.spinBox.value()])  
         qpixmap=helpers.convertImage(self.image2,self.dimensions)
         self.sourceImageView.setPixmap(qpixmap)
         # apply calibration
@@ -209,6 +209,15 @@ class ExtractDataApp(QMainWindow, Ui_MainWindow):
 
     def closeEvent(self, event):
         self.saveUserValues()
+
+    def loadImage(self, filename):
+        image=cv2.imread(filename)
+        # get image resolution
+        height,width, channel=image.shape
+        # resize image if it's too large
+        if width==1440 and height==1080:
+            image=cv2.resize(image, (int(width/2),int(height/2)))
+        return image
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
