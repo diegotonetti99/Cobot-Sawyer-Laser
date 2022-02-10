@@ -119,7 +119,6 @@ class ExtractDataApp(QMainWindow, Ui_MainWindow):
                     self.sourceImageView.setPixmap(qpixmap)
                     print('Calibrated. New  markers coordinates: ',self.calibration_markers)
 
-
     def loadImages(self):
         dialog = QFileDialog()
         #dialog.setOptions(QFileDialog.DontUseNativeDialog)
@@ -154,11 +153,13 @@ class ExtractDataApp(QMainWindow, Ui_MainWindow):
                 image = helpers.drawCircles(self.image2, self.circles)
                 qt_image=helpers.convertImage(image,self.dimensions)
                 self.sourceImageView_2.setPixmap(qt_image)
+            else:
+                qt_image=helpers.convertImage(self.image2,self.dimensions)
+                self.sourceImageView_2.setPixmap(qt_image)
 
     def saveCircle(self):
         if self.circles is not None:
             if len(self.circles[0,:])==1:
-                #self.foundPositions.append([self.circles[0,0][0],self.circles[0,0][1]])
                 # find calibration marker nearest to the find circle
                 circle = self.circles[0,0]
                 nearest=self.calibration_markers[0,0]
@@ -173,8 +174,12 @@ class ExtractDataApp(QMainWindow, Ui_MainWindow):
                 ])
                 df = pd.DataFrame(data=self.foundPositions,columns=['x laser','y laser', 'x marker', 'y marker', 'distance'])
                 if self.destFile is None:
-                    self.destFile = QFileDialog.getSaveFileName(self, 'Save file','laser_positions.csv','CSV File (*.csv)')
-                df.to_csv(self.destFile[0],encoding='utf-8')
+                    self.destFile = QFileDialog.getSaveFileName(self, 'Save file','laser_positions.csv','CSV File (*.csv)')  
+                try:
+                    df.to_csv(self.destFile[0],encoding='utf-8')
+                    self.label.setText("Points found: "+str(len(self.foundPositions)))
+                except:
+                    pass
 
     def saveUserValues(self):
         values = {
