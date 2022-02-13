@@ -19,6 +19,8 @@ import cv2
 
 import pandas as pd
 
+import numpy as np
+
 import json
 
 class ExtractDataApp(QMainWindow, Ui_MainWindow):
@@ -118,6 +120,8 @@ class ExtractDataApp(QMainWindow, Ui_MainWindow):
                     qpixmap=helpers.convertImage(image,self.dimensions)
                     self.sourceImageView.setPixmap(qpixmap)
                     print('Calibrated. New  markers coordinates: ',self.calibration_markers)
+                    
+
 
     def loadImages(self):
         dialog = QFileDialog()
