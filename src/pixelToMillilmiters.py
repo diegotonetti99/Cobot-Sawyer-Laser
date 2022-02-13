@@ -87,6 +87,10 @@ class App(QMainWindow, Ui_MainWindow):
                 ratio=markers_distance/pixel_distance
                 print('mm/px ratio: ',ratio)
                 self.label.setText(str(ratio))
+                df2=pd.DataFrame({'mm/px':[ratio]})
+                df=pd.concat([df,df2], axis=1)
+                print(df)
+                df.to_csv(self.filename[0])
             except:
                 print('error')
 
