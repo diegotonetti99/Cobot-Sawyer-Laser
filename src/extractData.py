@@ -120,9 +120,12 @@ class ExtractDataApp(QMainWindow, Ui_MainWindow):
                     qpixmap=helpers.convertImage(image,self.dimensions)
                     self.sourceImageView.setPixmap(qpixmap)
                     print('Calibrated. New  markers coordinates: ',self.calibration_markers)
-                    #temp=self.calibration_markers.reshape(20,2)
-                    #df=pd.DataFrame(temp,columns=['x marker', 'y marker'])
-                    #df.to_csv('/home/diegot/Desktop/temp.csv')
+                    try:
+                        temp=self.calibration_markers.reshape(20,2)
+                        df=pd.DataFrame(temp,columns=['x marker', 'y marker'])
+                        df.to_csv('/home/diegot/Desktop/temp.csv')
+                    except:
+                        pass
                     
 
 
